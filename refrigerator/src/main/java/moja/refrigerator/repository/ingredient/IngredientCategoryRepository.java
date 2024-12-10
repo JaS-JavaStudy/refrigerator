@@ -1,10 +1,9 @@
 package moja.refrigerator.repository.ingredient;
 
-import moja.refrigerator.aggregate.ingredient.IngredientManagement;
+import moja.refrigerator.aggregate.ingredient.IngredientCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface IngredientManagementRepository extends JpaRepository<IngredientManagement, Long> {
+public interface IngredientCategoryRepository extends JpaRepository<IngredientCategory, Integer> {
 }
-
