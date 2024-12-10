@@ -17,10 +17,10 @@ public class RecipeSource {
     private String cookingSourceSave;
 
     @Column(name = "cooking_source_create_time")
-    private String CookingSourceCreateTime;
+    private String cookingSourceCreateTime;
 
     @Column(name = "cooking_source_file_name")
-    private String CookingSourceFileName;
+    private String cookingSourceFileName;
 
     @JoinColumn(name = "cooking_source_type")
     @OneToOne

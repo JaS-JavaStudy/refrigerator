@@ -11,7 +11,7 @@ public class ReplacableIngredient {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "replaceable_ingredient_pk")
-    private long ReplaceableIngredientPk ;
+    private long replaceableIngredientPk ;
 
     @JoinColumn(name = "ingredient_management")
     @ManyToOne
@@ -19,5 +19,5 @@ public class ReplacableIngredient {
 
     @JoinColumn(name = "recipe_ingredient")
     @ManyToOne
-    private RecipeIngredient RecipeIngredient ;
+    private RecipeIngredient recipeIngredient ;
 }

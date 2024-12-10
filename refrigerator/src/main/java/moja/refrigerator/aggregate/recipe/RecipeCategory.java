@@ -10,7 +10,7 @@ public class RecipeCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "recipe_category_pk")
-    private int RecipeCategoryPK;
+    private int recipeCategoryPK;
 
     @Column(name = "recipe_category")
     private String recipeCategory;

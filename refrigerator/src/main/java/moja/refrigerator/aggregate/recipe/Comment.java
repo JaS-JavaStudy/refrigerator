@@ -11,14 +11,14 @@ public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "comment_pk")
-    private long CommentPk ;
+    private long commentPk ;
 
     @Column(name = "comment_create_time")
-    private String CommentCreateTime  ;
+    private String commentCreateTime  ;
     @Column(name = "comment_update_time")
-    private String CommentUpdateTime  ;
+    private String commentUpdateTime  ;
     @Column(name = "comment_contents")
-    private String CommentContents  ;
+    private String commentContents  ;
 
     @JoinColumn(name = "user")
     @ManyToOne
