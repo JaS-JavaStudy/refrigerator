@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class RequestRegistIngredientBookmark {
-    private int userPk;
-    private int ingredientPk;
+    private long userPk;
+    private long ingredientPk;
 }

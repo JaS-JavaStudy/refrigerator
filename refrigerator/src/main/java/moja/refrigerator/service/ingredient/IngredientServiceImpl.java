@@ -1,8 +1,11 @@
 package moja.refrigerator.service.ingredient;
 
 //import moja.refrigerator.aggregate.ingredient.IngredientCategory;
+import jakarta.persistence.EntityNotFoundException;
+import moja.refrigerator.aggregate.ingredient.IngredientBookmark;
 import moja.refrigerator.aggregate.ingredient.IngredientManagement;
 //import moja.refrigerator.aggregate.ingredient.IngredientStorage;
+import moja.refrigerator.aggregate.user.User;
 import moja.refrigerator.dto.ingredient.request.IngredientCreateRequest;
 //import moja.refrigerator.repository.ingredient.IngredientCategoryRepository;
 import moja.refrigerator.dto.ingredient.request.RequestRegistIngredientBookmark;
@@ -10,7 +13,9 @@ import moja.refrigerator.dto.ingredient.response.ResponseRegistIngredientBookmar
 import moja.refrigerator.repository.ingredient.IngredientBookmarkRepository;
 import moja.refrigerator.repository.ingredient.IngredientManagementRepository;
 //import moja.refrigerator.repository.ingredient.IngredientStorageRepository;
+import moja.refrigerator.repository.user.UserRepository;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +27,7 @@ public class IngredientServiceImpl implements IngredientService{
 //    private IngredientStorageRepository ingredientStorageRepository;
 //    private IngredientCategoryRepository ingredientCategoryRepository;
     private IngredientBookmarkRepository ingredientBookmarkRepository;
+    private UserRepository userRepository;
     private ModelMapper mapper;
 
     @Autowired
@@ -29,11 +35,13 @@ public class IngredientServiceImpl implements IngredientService{
 //                                 IngredientStorageRepository ingredientStorageRepository,
 //                                 IngredientCategoryRepository ingredientCategoryRepository,
                                  IngredientBookmarkRepository ingredientBookmarkRepository,
+                                 UserRepository userRepository,
                                  ModelMapper mapper) {
         this.ingredientManagementRepository = ingredientManagementRepository;
 //        this.ingredientStorageRepository = ingredientStorageRepository;
 //        this.ingredientCategoryRepository = ingredientCategoryRepository;
         this.ingredientBookmarkRepository = ingredientBookmarkRepository;
+        this.userRepository = userRepository;
         this.mapper = mapper;
     }
 
@@ -56,7 +64,22 @@ public class IngredientServiceImpl implements IngredientService{
 
     @Override
     public ResponseRegistIngredientBookmark createIngredientBookmark(RequestRegistIngredientBookmark requestBookmark) {
+        User user = userRepository.findById(requestBookmark.getUserPk())
+                .orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다."));
 
-        return new ResponseRegistIngredientBookmark();
+        IngredientManagement ingredientManagement = ingredientManagementRepository
+                .findById(requestBookmark.getIngredientPk())
+                .orElseThrow(() -> new EntityNotFoundException("재료를 찾을 수 없습니다."));
+
+        IngredientBookmark ingredientBookmark = new IngredientBookmark();
+
+        ingredientBookmark.setUser(user);
+        ingredientBookmark.setIngredientManagement(ingredientManagement);
+
+        ingredientBookmarkRepository.save(ingredientBookmark);
+
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+
+        return mapper.map(ingredientBookmark, ResponseRegistIngredientBookmark.class);
     }
 }
