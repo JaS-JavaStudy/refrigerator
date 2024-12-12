@@ -11,6 +11,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import moja.refrigerator.dto.ingredient.response.IngredientResponse;
+import moja.refrigerator.service.ingredient.IngredientService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/ingredient")
@@ -22,10 +29,12 @@ public class IngredientController {
         this.ingredientService = ingredientService;
     }
 
+    // 재료 등록
     @PostMapping
     public void createIngredient(@RequestBody IngredientCreateRequest request) {
         ingredientService.createIngredient(request);
     }
+
 
     @PostMapping("/bookmark/regist")
     public ResponseEntity<ResponseRegistIngredientBookmark> createIngredientBookmark(
@@ -35,5 +44,11 @@ public class IngredientController {
                 ingredientService.createIngredientBookmark(requestBookmark);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseBookmark);
+      
+    // 재료 조회
+    @GetMapping
+    public List<IngredientResponse> getIngredient() {
+        return ingredientService.getIngredient();
+
     }
 }
