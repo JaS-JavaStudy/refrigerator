@@ -9,16 +9,11 @@ public class IngredientResponse {
     private String expirationDate;
     private String registrationDate;
     private int seasonDate;
+    // 조회 시에는 pk 말고 이름으로 조회 되도록
+    private String ingredientCategory;
+    private String ingredientStorage;
 
-    // ModelMapper를 위한 기본 생성자 생성
+    // ModelMapper 를 위한 기본 생성자 생성
     public IngredientResponse() {}
 
-    // 생성자
-    public IngredientResponse(long ingredientManagementPk, String ingredientName, String expirationDate, String registrationDate, int seasonDate) {
-        this.ingredientManagementPk = ingredientManagementPk;
-        this.ingredientName = ingredientName;
-        this.expirationDate = expirationDate;
-        this.registrationDate = registrationDate;
-        this.seasonDate = seasonDate;
-    }
 }
