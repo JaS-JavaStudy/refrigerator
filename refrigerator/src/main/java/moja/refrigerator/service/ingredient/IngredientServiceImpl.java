@@ -5,12 +5,16 @@ import moja.refrigerator.aggregate.ingredient.IngredientManagement;
 //import moja.refrigerator.aggregate.ingredient.IngredientStorage;
 import moja.refrigerator.dto.ingredient.request.IngredientCreateRequest;
 //import moja.refrigerator.repository.ingredient.IngredientCategoryRepository;
+import moja.refrigerator.dto.ingredient.response.IngredientResponse;
 import moja.refrigerator.repository.ingredient.IngredientManagementRepository;
 //import moja.refrigerator.repository.ingredient.IngredientStorageRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class IngredientServiceImpl implements IngredientService{
@@ -45,6 +49,18 @@ public class IngredientServiceImpl implements IngredientService{
 //        ingredient.setIngredientCategory(category);
 //        ingredient.setIngredientStorage(storage);
 
+        // 재료를 JpaRepository의 save() 메소드로 DB에 저장 !
         ingredientManagementRepository.save(ingredient);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<IngredientResponse> getIngredient() {
+        List<IngredientManagement> ingredients = ingredientManagementRepository.findAll();
+
+        return ingredients.stream()
+                .map(ingredient -> mapper.map(ingredient, IngredientResponse.class))
+                .collect(Collectors.toList());
+    }
+
 }
