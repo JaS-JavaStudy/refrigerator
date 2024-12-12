@@ -1,10 +1,10 @@
 package moja.refrigerator.repository.recipe;
 
-import moja.refrigerator.aggregate.recipe.Recipe;
+import moja.refrigerator.aggregate.recipe.RecipeCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface RecipeRepository extends JpaRepository<Recipe, Long> {
-}
+public interface RecipeCategoryRepositoy extends JpaRepository<RecipeCategory,Integer> {
 
+}
