@@ -8,9 +8,11 @@ import moja.refrigerator.aggregate.ingredient.IngredientStorage;
 import moja.refrigerator.aggregate.user.User;
 import moja.refrigerator.dto.ingredient.request.IngredientCreateRequest;
 import moja.refrigerator.dto.ingredient.request.IngredientUpdateRequest;
+import moja.refrigerator.dto.ingredient.request.RequestIngredientBookmarkLists;
 import moja.refrigerator.dto.ingredient.request.RequestRegistIngredientBookmark;
 import moja.refrigerator.dto.ingredient.response.IngredientResponse;
 import moja.refrigerator.dto.ingredient.response.ResponseRegistIngredientBookmark;
+import moja.refrigerator.dto.ingredient.response.ResponseUsersIngredientBookmarkLists;
 import moja.refrigerator.repository.ingredient.IngredientBookmarkRepository;
 import moja.refrigerator.repository.ingredient.IngredientCategoryRepository;
 import moja.refrigerator.repository.ingredient.IngredientManagementRepository;
@@ -134,5 +136,16 @@ public class IngredientServiceImpl implements IngredientService{
         return mapper.map(ingredientBookmark, ResponseRegistIngredientBookmark.class);
     }
 
+    @Override
+    public List<ResponseUsersIngredientBookmarkLists> getUsersIngredientBookmarkLists(
+            RequestIngredientBookmarkLists requestBookmarkLists) {
+        List<IngredientBookmark> ingredientBookmarkLists = ingredientBookmarkRepository
+                .findAllByUser_UserPk(requestBookmarkLists.getUserPk());
 
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+
+        return ingredientBookmarkLists.stream().map(ingredientBookmark -> mapper
+                .map(ingredientBookmark, ResponseUsersIngredientBookmarkLists.class))
+                .collect(Collectors.toList());
+    }
 }
