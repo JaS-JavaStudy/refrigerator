@@ -1,6 +1,7 @@
 package moja.refrigerator.controller.ingredient;
 
 import moja.refrigerator.dto.ingredient.request.IngredientCreateRequest;
+import moja.refrigerator.dto.ingredient.request.IngredientUpdateRequest;
 import moja.refrigerator.dto.ingredient.request.RequestRegistIngredientBookmark;
 import moja.refrigerator.dto.ingredient.response.ResponseRegistIngredientBookmark;
 import moja.refrigerator.service.ingredient.IngredientService;
@@ -51,4 +52,17 @@ public class IngredientController {
         return ingredientService.getIngredient();
 
     }
+
+    // 재료 정보 수정
+    @PutMapping
+    public void updateIngredient(@RequestBody IngredientUpdateRequest request) {
+        ingredientService.updateIngredient(request);
+    }
+
+    // 재료 삭제
+    @DeleteMapping
+    public void deleteIngredient(@RequestParam long ingredientManagementPK) {
+        ingredientService.deleteIngredient(ingredientManagementPK);
+    }
+
 }
