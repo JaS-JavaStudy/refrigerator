@@ -10,9 +10,9 @@ import lombok.Data;
 public class RecipeSourceType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "cooking_source_type_pk")
-    private int cookingSourceTypePk;
+    @Column(name = "recipe_source_type_pk")
+    private int recipeSourceTypePk;
 
-    @Column(name = "cooking_source_type",length = 50)
-    private String cookingSourceType;
+    @Column(name = "recipe_source_type",length = 50)
+    private String recipeSourceType;
 }
