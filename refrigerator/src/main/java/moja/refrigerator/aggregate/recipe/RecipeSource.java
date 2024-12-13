@@ -27,7 +27,7 @@ public class RecipeSource {
     private String recipeSourceFileName;
 
     @JoinColumn(name = "recipe_source_type") // 자료타입 동영상 or 사진
-    @OneToOne
+    @ManyToOne
     private RecipeSourceType recipeSourceType;
 
 }
