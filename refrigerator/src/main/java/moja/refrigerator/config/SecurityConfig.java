@@ -34,9 +34,9 @@ public class SecurityConfig {
         // URL 별 접근 권한 설정
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/join", "/ingredient").permitAll()  // 이 경로들은 모두 접근 가능
-                        .requestMatchers("/admin").hasRole("ADMIN")               // admin 경로는 ADMIN 역할을 가진 사용자만
-                        .anyRequest().authenticated());                             // 나머지는 인증된 사용자만
+                        .requestMatchers("/**").permitAll()  // 이 경로들은 모두 접근 가능
+                        .requestMatchers("/admin").hasRole("ADMIN")  // admin 경로는 ADMIN 역할을 가진 사용자만
+                        .anyRequest().authenticated());  // 나머지는 인증된 사용자만
 
         // 세션 관리 설정
         http
