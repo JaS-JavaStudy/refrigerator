@@ -1,12 +1,18 @@
 package moja.refrigerator.controller.ingredient;
 
 import moja.refrigerator.dto.ingredient.request.IngredientCreateRequest;
+import moja.refrigerator.dto.ingredient.request.IngredientUpdateRequest;
+import moja.refrigerator.dto.ingredient.request.RequestRegistIngredientBookmark;
 import moja.refrigerator.dto.ingredient.response.IngredientResponse;
+import moja.refrigerator.dto.ingredient.response.ResponseRegistIngredientBookmark;
 import moja.refrigerator.service.ingredient.IngredientService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/ingredient")
@@ -28,5 +34,29 @@ public class IngredientController {
     @GetMapping
     public List<IngredientResponse> getIngredient() {
         return ingredientService.getIngredient();
+
     }
+
+    // 재료 정보 수정
+    @PutMapping
+    public void updateIngredient(@RequestBody IngredientUpdateRequest request) {
+        ingredientService.updateIngredient(request);
+    }
+
+    // 재료 삭제
+    @DeleteMapping
+    public void deleteIngredient(@RequestParam long ingredientManagementPk) {
+        ingredientService.deleteIngredient(ingredientManagementPk);
+    }
+
+    @PostMapping("/bookmark/regist")
+    public ResponseEntity<ResponseRegistIngredientBookmark> createIngredientBookmark(
+            @RequestBody RequestRegistIngredientBookmark requestBookmark
+            ) {
+        ResponseRegistIngredientBookmark responseBookmark =
+                ingredientService.createIngredientBookmark(requestBookmark);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseBookmark);
+    }
+
 }

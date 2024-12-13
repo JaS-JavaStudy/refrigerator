@@ -5,6 +5,7 @@ import moja.refrigerator.aggregate.recipe.Recipe;
 import moja.refrigerator.aggregate.recipe.RecipeCategory;
 import moja.refrigerator.aggregate.recipe.RecipeSource;
 import moja.refrigerator.dto.recipe.request.RecipeCreateRequest;
+import moja.refrigerator.dto.recipe.request.RecipeUpdateRequest;
 import moja.refrigerator.dto.recipe.response.RecipeResponse;
 import moja.refrigerator.repository.recipe.RecipeCategoryRepositoy;
 import moja.refrigerator.repository.recipe.RecipeRepository;
@@ -73,4 +74,29 @@ public class RecipeServiceImpl implements RecipeService {
                 .map(recipe -> mapper.map(recipe, RecipeResponse.class))
                 .collect(Collectors.toList());
     };
+
+    @Override
+    public void deleteRecipe(long recipePk) {
+        Recipe recipe = recipeRepository.findByRecipePk(recipePk)
+                .orElseThrow(IllegalArgumentException::new);
+        recipeRepository.delete(recipe);
+    }
+
+    @Override
+    @Transactional
+    public void updateRecipe(RecipeUpdateRequest request) {
+        Recipe recipe = recipeRepository.findByRecipePk(request.getRecipePk())
+                .orElseThrow(IllegalArgumentException::new);
+
+        if (request.getRecipeName() != null) recipe.setRecipeName(request.getRecipeName());
+        if (request.getRecipeCookingTime() != 0) recipe.setRecipeCookingTime(request.getRecipeCookingTime());
+        if (request.getRecipeDifficulty() != 0) recipe.setRecipeDifficulty(request.getRecipeDifficulty());
+        if (request.getRecipeSource() != null) recipe.setRecipeSource(recipeSourceRepository.findByRecipeSourceFileName(request.getRecipeSource())
+                .orElseThrow(IllegalArgumentException::new));
+        if (request.getRecipeCategory() != null) recipe.setRecipeCategory(recipeCategoryRepositoy.findByRecipeCategory(request.getRecipeCategory())
+                .orElseThrow(IllegalArgumentException::new));
+
+        recipeRepository.save(recipe);
+
+    }
 }

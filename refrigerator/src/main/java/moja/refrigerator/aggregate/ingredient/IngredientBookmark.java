@@ -15,10 +15,10 @@ public class IngredientBookmark {
     private long ingredientBookmarkPk;
 
     @ManyToOne
-    @JoinColumn(name = "user")
+    @JoinColumn(name = "user_pk")
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "ingredient_management")
+    @JoinColumn(name = "ingredient_management_pk")
     private IngredientManagement ingredientManagement;
 }

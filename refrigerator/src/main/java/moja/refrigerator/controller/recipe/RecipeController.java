@@ -2,6 +2,7 @@ package moja.refrigerator.controller.recipe;
 
 import moja.refrigerator.aggregate.recipe.Recipe;
 import moja.refrigerator.dto.recipe.request.RecipeCreateRequest;
+import moja.refrigerator.dto.recipe.request.RecipeUpdateRequest;
 import moja.refrigerator.dto.recipe.response.RecipeResponse;
 import moja.refrigerator.service.recipe.RecipeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,5 +28,15 @@ public class RecipeController {
     @GetMapping
     public List<RecipeResponse> getAllRecipes(){
         return recipeService.getAllRecipes();
+    }
+
+    @DeleteMapping
+    public void deleteRecipe(@RequestParam long recipePk){
+        recipeService.deleteRecipe(recipePk);
+    }
+
+    @PutMapping
+    public void updateRecipe(@RequestBody RecipeUpdateRequest request){
+        recipeService.updateRecipe(request);
     }
 }
