@@ -1,12 +1,7 @@
 package moja.refrigerator.service.ingredient;
 
-import moja.refrigerator.dto.ingredient.request.IngredientCreateRequest;
-import moja.refrigerator.dto.ingredient.request.IngredientUpdateRequest;
-import moja.refrigerator.dto.ingredient.request.RequestIngredientBookmarkLists;
-import moja.refrigerator.dto.ingredient.request.RequestRegistIngredientBookmark;
-import moja.refrigerator.dto.ingredient.response.IngredientResponse;
-import moja.refrigerator.dto.ingredient.response.ResponseRegistIngredientBookmark;
-import moja.refrigerator.dto.ingredient.response.ResponseUsersIngredientBookmarkLists;
+import moja.refrigerator.dto.ingredient.request.*;
+import moja.refrigerator.dto.ingredient.response.*;
 
 import java.util.List;
 
@@ -21,5 +16,8 @@ public interface IngredientService {
     void updateIngredient(IngredientUpdateRequest request);
     void deleteIngredient(long ingredientManagementPk);
 
-    List<ResponseUsersIngredientBookmarkLists> getUsersIngredientBookmarkLists(RequestIngredientBookmarkLists requestBookmarkLists);
+    List<ResponseUsersIngredientBookmarkLists> getUsersIngredientBookmarkLists(
+            RequestIngredientBookmarkLists requestBookmarkLists);
+
+    ResponseDeleteIngredientBookmark deleteIngredientBookmark(RequestDeleteIngredientBookmark requestDeleteBookmark);
 }
