@@ -1,6 +1,7 @@
 package moja.refrigerator.aggregate.recipe;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -51,9 +52,15 @@ public class Recipe {
     @ManyToOne
     private User user;
 
-    @OneToMany (mappedBy = "recipe")// 1개의 레시피에 여러 이미지가 들어갈 수 있으니까 수정
-    private List<RecipeSource> recipeSource = new ArrayList<>(); // 여러 Source가 들어갈 수 있으니까 list로 수정
+    @OneToMany (mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)// 1개의 레시피에 여러 이미지가 들어갈 수 있으니까 수정
+    private List<RecipeSource> recipeSource = new ArrayList<>() ; // 여러 Source가 들어갈 수 있으니까 list로 수정
 
+    public void addRecipeSource(RecipeSource recipeSource) {
+        this.recipeSource.add(recipeSource);
+        if(recipeSource.getRecipe() != this) {
+            recipeSource.setRecipe(this);
+        }
+    }
     @JoinColumn(name = "recipe_category")
     @ManyToOne
     private RecipeCategory recipeCategory;

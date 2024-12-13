@@ -10,9 +10,9 @@ public class RecipeCreateRequest {
     private String recipeName;
     private int recipeCookingTime;
     private int recipeDifficulty;
-
-    private long recipeSource;
-    private long recipeCategory;
+    private String recipeContent;
+//    private long recipeSource;
+    private int recipeCategoryPk;
     private long userPk;
 
 //    private long recipePk; // 자동 추가

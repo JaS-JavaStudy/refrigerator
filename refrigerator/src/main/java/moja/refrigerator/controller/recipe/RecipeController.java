@@ -23,10 +23,12 @@ public class RecipeController {
 
     @PostMapping
     public void createRecipe(
-            @RequestPart RecipeCreateRequest request,
-            @RequestPart (required =false) List<MultipartFile> files
+            @RequestPart RecipeCreateRequest request
+            , @RequestPart (required =false) List<MultipartFile> files
     ){
-        recipeService.createRecipe(request,files);
+        recipeService.createRecipe(request
+                , files
+        );
     }
 
     @GetMapping

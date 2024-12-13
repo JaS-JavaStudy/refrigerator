@@ -11,7 +11,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface RecipeService {
-    void createRecipe(RecipeCreateRequest request,List<MultipartFile> files);
+    void createRecipe(RecipeCreateRequest request
+            ,List<MultipartFile> files
+    );
     List<RecipeResponse> getAllRecipes();
     void deleteRecipe(long recipePk);
     void updateRecipe(RecipeUpdateRequest request);

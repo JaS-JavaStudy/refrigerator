@@ -1,6 +1,9 @@
 package moja.refrigerator.dto.recipe.response;
 
 import lombok.Data;
+import moja.refrigerator.aggregate.recipe.RecipeCategory;
+import moja.refrigerator.aggregate.recipe.RecipeSource;
+import moja.refrigerator.aggregate.user.User;
 
 import java.time.LocalDateTime;
 
@@ -12,12 +15,13 @@ public class RecipeResponse {
     private int recipeCookingTime;
     private int recipeDifficulty;
     private long recipeViews;
+    private String recipeContent;
 
     private LocalDateTime recipeCreateTime;;
     private LocalDateTime recipeUpdateTime;
 
-    private String recipeSource;
-    private String userPk;
-    private String recipeCategory;
+    private RecipeSource recipeSource;
+    private User user;
+    private RecipeCategory recipeCategory;
 
 }

@@ -1,6 +1,8 @@
 package moja.refrigerator.aggregate.recipe;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -29,12 +31,12 @@ public class RecipeSource {
     private RecipeSourceType recipeSourceType;
 
     @ManyToOne
-    @JoinColumn(name = "recipePk")
+    @JoinColumn(name = "recipe_pk")
     private Recipe recipe;
 
     public void setRecipe(Recipe recipe) {
         this.recipe = recipe;
-        if (!recipe.getRecipeSource().contains(this)){
+        if(!recipe.getRecipeSource().contains(this)){
             recipe.getRecipeSource().add(this);
         }
     }

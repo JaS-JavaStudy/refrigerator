@@ -2,6 +2,7 @@ package moja.refrigerator.service.recipe;
 
 
 import moja.refrigerator.aggregate.recipe.Recipe;
+import moja.refrigerator.aggregate.recipe.RecipeCategory;
 import moja.refrigerator.aggregate.recipe.RecipeSource;
 import moja.refrigerator.aggregate.recipe.RecipeSourceType;
 import moja.refrigerator.aggregate.user.User;
@@ -11,11 +12,13 @@ import moja.refrigerator.dto.recipe.response.RecipeResponse;
 import moja.refrigerator.repository.recipe.RecipeCategoryRepository;
 import moja.refrigerator.repository.recipe.RecipeRepository;
 import moja.refrigerator.repository.recipe.RecipeSourceRepository;
+import moja.refrigerator.repository.recipe.RecipeSourceTypeRepository;
 import moja.refrigerator.repository.user.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,9 +35,10 @@ public class RecipeServiceImpl implements RecipeService {
     private RecipeSourceRepository recipeSourceRepository;
     private RecipeCategoryRepository recipeCategoryRepository;
     private ModelMapper mapper;
+    private RecipeSourceTypeRepository recipeSourceTypeRepository;
 
     @Value("${spring.servlet.multipart.location}")
-    private String fileDir;
+    public String fileDir;
 
     // 이미지의 확장자를 확인, 이를 이용해 타입을 분류한다.
     private boolean isImageFile(String fileName) {
@@ -54,24 +58,29 @@ public class RecipeServiceImpl implements RecipeService {
             ModelMapper mapper,
             RecipeSourceRepository recipeSourceRepository,
             UserRepository userRepository,
-            RecipeCategoryRepository recipeCategoryRepository
+            RecipeCategoryRepository recipeCategoryRepository,
+            RecipeSourceTypeRepository recipeSourceTypeRepository
     ) {
         this.recipeRepository = recipeRepository;
         this.mapper = mapper;
         this.recipeSourceRepository = recipeSourceRepository;
         this.userRepository = userRepository;
         this.recipeCategoryRepository = recipeCategoryRepository;
+        this.recipeSourceTypeRepository=recipeSourceTypeRepository;
     }
 
     @Override
-    @Transactional
-    public void createRecipe(RecipeCreateRequest request,
-                             List<MultipartFile> files
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void createRecipe(RecipeCreateRequest request
+            ,List<MultipartFile> files
     ) {
+        Recipe recipe = new Recipe();
+        recipe.setRecipeName(request.getRecipeName());
+        recipe.setRecipeContent(request.getRecipeContent());
+        recipe.setRecipeDifficulty(request.getRecipeDifficulty());
+        recipe.setRecipeCookingTime(request.getRecipeCookingTime());
 
-        Recipe recipe = mapper.map(request, Recipe.class);
-
-        //User 조회
+//        User 조회
         User user = userRepository.findById(request.getUserPk())
                         .orElseThrow(IllegalArgumentException::new);
         recipe.setUser(user);
@@ -89,17 +98,16 @@ public class RecipeServiceImpl implements RecipeService {
                 recipeSource.setRecipeSourceFileName(recipeSourceFileName);
                 // 3. 자료 타입 가져오기.
                 if(isImageFile(recipeSourceFileName)){
-                    RecipeSourceType recipeSourceType = recipeSourceTypeRepository
+                    RecipeSourceType recipeSourceType = recipeSourceTypeRepository.getReferenceById((long)1);
                 }
 
             }
         }
 
-        //RecipeCategory
-//        RecipeCategory recipeCategory = .findById(request.getRecipeCategory())
-//                        .orElseThrow(IllegalArgumentException::new);
-//        recipe.setRecipeCategory(recipeCategory);
-
+//        RecipeCategory
+        RecipeCategory recipeCategory = recipeCategoryRepository.findById(request.getRecipeCategoryPk())
+                        .orElseThrow(IllegalArgumentException::new);
+        recipe.setRecipeCategory(recipeCategory);
         recipeRepository.save(recipe);
     }
 
