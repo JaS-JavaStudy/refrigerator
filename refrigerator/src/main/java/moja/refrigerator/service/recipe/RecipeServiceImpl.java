@@ -96,11 +96,21 @@ public class RecipeServiceImpl implements RecipeService {
                 RecipeSource recipeSource = new RecipeSource();
                 recipeSource.setRecipeSourceSave(recipeSourceSave);
                 recipeSource.setRecipeSourceFileName(recipeSourceFileName);
-                // 3. 자료 타입 가져오기.
-                if(isImageFile(recipeSourceFileName)){
-                    RecipeSourceType recipeSourceType = recipeSourceTypeRepository.getReferenceById((long)1);
-                }
 
+                // 3. 자료 타입 가져오기.
+
+                RecipeSourceType recipeSourceType;
+                if(isImageFile(recipeSourceFileName)){
+                    recipeSourceType = recipeSourceTypeRepository.findById(1)
+                        .orElseThrow(IllegalArgumentException::new);
+                }else if (isVideoFile(recipeSourceFileName)){
+                    recipeSourceType = recipeSourceTypeRepository.findById(2)
+                            .orElseThrow(IllegalArgumentException::new);
+                }else{
+                    throw new IllegalArgumentException("Unsupported file type");
+                }
+                recipeSource.setRecipeSourceType(recipeSourceType);
+                recipeSourceRepository.save(recipeSource);
             }
         }
 

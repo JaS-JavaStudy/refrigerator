@@ -52,15 +52,11 @@ public class Recipe {
     @ManyToOne
     private User user;
 
-    @OneToMany (mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)// 1개의 레시피에 여러 이미지가 들어갈 수 있으니까 수정
+    @OneToMany // 1개의 레시피에 여러 이미지가 들어갈 수 있으니까 수정
+    @JoinColumn (name = "recipe_pk")
     private List<RecipeSource> recipeSource = new ArrayList<>() ; // 여러 Source가 들어갈 수 있으니까 list로 수정
 
-    public void addRecipeSource(RecipeSource recipeSource) {
-        this.recipeSource.add(recipeSource);
-        if(recipeSource.getRecipe() != this) {
-            recipeSource.setRecipe(this);
-        }
-    }
+
     @JoinColumn(name = "recipe_category")
     @ManyToOne
     private RecipeCategory recipeCategory;

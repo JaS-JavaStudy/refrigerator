@@ -30,15 +30,5 @@ public class RecipeSource {
     @OneToOne
     private RecipeSourceType recipeSourceType;
 
-    @ManyToOne
-    @JoinColumn(name = "recipe_pk")
-    private Recipe recipe;
-
-    public void setRecipe(Recipe recipe) {
-        this.recipe = recipe;
-        if(!recipe.getRecipeSource().contains(this)){
-            recipe.getRecipeSource().add(this);
-        }
-    }
 }
 
