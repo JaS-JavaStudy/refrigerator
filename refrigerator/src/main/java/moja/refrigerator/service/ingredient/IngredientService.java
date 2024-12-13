@@ -2,11 +2,11 @@ package moja.refrigerator.service.ingredient;
 
 import moja.refrigerator.dto.ingredient.request.IngredientCreateRequest;
 import moja.refrigerator.dto.ingredient.request.IngredientUpdateRequest;
-import moja.refrigerator.dto.ingredient.response.IngredientResponse;
 import moja.refrigerator.dto.ingredient.request.RequestRegistIngredientBookmark;
-import moja.refrigerator.dto.ingredient.response.ResponseRegistIngredientBookmark;
-import java.util.List;
 import moja.refrigerator.dto.ingredient.response.IngredientResponse;
+import moja.refrigerator.dto.ingredient.response.ResponseRegistIngredientBookmark;
+
+import java.util.List;
 
 public interface IngredientService {
 //     void createIngredient(IngredientCreateRequest request);
@@ -17,5 +17,5 @@ public interface IngredientService {
   
     List<IngredientResponse> getIngredient(); // 재료 조회 메서드
     void updateIngredient(IngredientUpdateRequest request);
-    void deleteIngredient(long ingredientManagementPK);
+    void deleteIngredient(long ingredientManagementPk);
 }
