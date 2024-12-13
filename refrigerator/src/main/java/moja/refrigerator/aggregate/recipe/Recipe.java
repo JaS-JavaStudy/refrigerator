@@ -1,6 +1,7 @@
 package moja.refrigerator.aggregate.recipe;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;
 import moja.refrigerator.aggregate.user.User;
@@ -8,6 +9,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -25,6 +28,8 @@ public class Recipe {
     @Column(name = "recipe_cooking_time")
     private int recipeCookingTime;
 
+    @Column(name = "recipe_content",columnDefinition = "TEXT") // 길이 제한을 해제하기 위해 text로 설정
+    private String recipeContent;
 
     @CreationTimestamp
     @Column(name = "recipe_create_time")
@@ -46,11 +51,11 @@ public class Recipe {
     @ManyToOne
     private User user;
 
-    @JoinColumn(name = "recipe_source")
-    @ManyToOne
-    private RecipeSource recipeSource;
+    @OneToMany (mappedBy = "recipe")// 1개의 레시피에 여러 이미지가 들어갈 수 있으니까 수정
+    private List<RecipeSource> recipeSource = new ArrayList<>(); // 여러 Source가 들어갈 수 있으니까 list로 수정
 
     @JoinColumn(name = "recipe_category")
     @ManyToOne
     private RecipeCategory recipeCategory;
+
 }
