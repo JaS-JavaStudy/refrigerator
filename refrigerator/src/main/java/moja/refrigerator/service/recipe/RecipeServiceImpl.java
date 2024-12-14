@@ -1,6 +1,8 @@
 package moja.refrigerator.service.recipe;
 
 
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import moja.refrigerator.aggregate.recipe.Recipe;
 import moja.refrigerator.aggregate.recipe.RecipeCategory;
 import moja.refrigerator.aggregate.recipe.RecipeSource;
@@ -23,8 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,9 +40,10 @@ public class RecipeServiceImpl implements RecipeService {
     private RecipeCategoryRepository recipeCategoryRepository;
     private ModelMapper mapper;
     private RecipeSourceTypeRepository recipeSourceTypeRepository;
+    private final AmazonS3Client amazonS3Client;
 
-    @Value("${spring.servlet.multipart.location}")
-    public String fileDir;
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     // 이미지의 확장자를 확인, 이를 이용해 타입을 분류한다.
     private boolean isImageFile(String fileName) {
@@ -59,7 +64,8 @@ public class RecipeServiceImpl implements RecipeService {
             RecipeSourceRepository recipeSourceRepository,
             UserRepository userRepository,
             RecipeCategoryRepository recipeCategoryRepository,
-            RecipeSourceTypeRepository recipeSourceTypeRepository
+            RecipeSourceTypeRepository recipeSourceTypeRepository,
+            AmazonS3Client amazonS3Client
     ) {
         this.recipeRepository = recipeRepository;
         this.mapper = mapper;
@@ -67,6 +73,7 @@ public class RecipeServiceImpl implements RecipeService {
         this.userRepository = userRepository;
         this.recipeCategoryRepository = recipeCategoryRepository;
         this.recipeSourceTypeRepository=recipeSourceTypeRepository;
+        this.amazonS3Client = amazonS3Client;
     }
 
     @Override
@@ -74,50 +81,71 @@ public class RecipeServiceImpl implements RecipeService {
     public void createRecipe(RecipeCreateRequest request
             ,List<MultipartFile> files
     ) {
-        Recipe recipe = new Recipe();
+        Recipe recipe = new Recipe(); // mapper를 통한인식이 잘 안됨. -> 그냥 일일이 추가.
         recipe.setRecipeName(request.getRecipeName());
         recipe.setRecipeContent(request.getRecipeContent());
         recipe.setRecipeDifficulty(request.getRecipeDifficulty());
         recipe.setRecipeCookingTime(request.getRecipeCookingTime());
+
 
 //        User 조회
         User user = userRepository.findById(request.getUserPk())
                         .orElseThrow(IllegalArgumentException::new);
         recipe.setUser(user);
 
+//        RecipeCategory
+        RecipeCategory recipeCategory = recipeCategoryRepository.findById(request.getRecipeCategoryPk())
+                .orElseThrow(IllegalArgumentException::new);
+        recipe.setRecipeCategory(recipeCategory);
         //RecipeSource 추가부분
         if(files != null && !files.isEmpty()) {
             for(MultipartFile file : files){
-                // 1. 작성할 내용 정리
-                String recipeSourceFileName = file.getOriginalFilename();
-                String recipeSourceSave = fileDir+recipeSourceFileName;
+                try{// 1. 작성할 내용 정리
+                    String recipeSourceFileName = file.getOriginalFilename();
+                    UUID uuid = UUID.randomUUID();
+                    String recipeSourceServername = uuid+recipeSourceFileName;
 
-                // 2. 작성한 내용 저장
-                RecipeSource recipeSource = new RecipeSource();
-                recipeSource.setRecipeSourceSave(recipeSourceSave);
-                recipeSource.setRecipeSourceFileName(recipeSourceFileName);
+                    String recipeSourceSave = "https://"+bucket+"/recipe/"+recipeSourceServername;
 
-                // 3. 자료 타입 가져오기.
 
-                RecipeSourceType recipeSourceType;
-                if(isImageFile(recipeSourceFileName)){
-                    recipeSourceType = recipeSourceTypeRepository.findById(1)
-                        .orElseThrow(IllegalArgumentException::new);
-                }else if (isVideoFile(recipeSourceFileName)){
-                    recipeSourceType = recipeSourceTypeRepository.findById(2)
-                            .orElseThrow(IllegalArgumentException::new);
-                }else{
-                    throw new IllegalArgumentException("Unsupported file type");
+                    // 2. 작성한 내용 저장
+                    RecipeSource recipeSource = new RecipeSource();
+                    recipeSource.setRecipeSourceServername(recipeSourceServername);
+                    recipeSource.setRecipeSourceSave(recipeSourceSave);
+                    recipeSource.setRecipeSourceFileName(recipeSourceFileName);
+
+
+                    // 3. 자료 타입 가져오기.
+
+                    RecipeSourceType recipeSourceType;
+                    if(isImageFile(recipeSourceFileName)){
+                        recipeSourceType = recipeSourceTypeRepository.findById(1)
+                                .orElseThrow(IllegalArgumentException::new);
+                    }else if (isVideoFile(recipeSourceFileName)){
+                        recipeSourceType = recipeSourceTypeRepository.findById(2)
+                                .orElseThrow(IllegalArgumentException::new);
+                    }else{
+                        throw new IllegalArgumentException("Unsupported file type");
+                    }
+
+                    // 아마존 서버 올리기
+                    ObjectMetadata objectMetadata = new ObjectMetadata();
+                    objectMetadata.setContentType(file.getContentType());
+                    objectMetadata.setContentLength(file.getSize());
+                    amazonS3Client.putObject(bucket,recipeSourceFileName,file.getInputStream(),objectMetadata);
+
+                    // 레시피 db에 저장.
+                    recipeSource.setRecipeSourceType(recipeSourceType);
+                    recipeSource.setRecipe(recipe);
+                    recipeSourceRepository.save(recipeSource);
+                    break;
+                }catch (IOException e){
+                    System.out.println(e.getMessage());
                 }
-                recipeSource.setRecipeSourceType(recipeSourceType);
-                recipeSourceRepository.save(recipeSource);
+
             }
         }
 
-//        RecipeCategory
-        RecipeCategory recipeCategory = recipeCategoryRepository.findById(request.getRecipeCategoryPk())
-                        .orElseThrow(IllegalArgumentException::new);
-        recipe.setRecipeCategory(recipeCategory);
         recipeRepository.save(recipe);
     }
 
