@@ -52,7 +52,7 @@ public class Recipe {
     @ManyToOne
     private User user;
 
-    @OneToMany(mappedBy = "recipe") // 1개의 레시피에 여러 이미지가 들어갈 수 있으니까 수정
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY) // 1개의 레시피에 여러 이미지가 들어갈 수 있으니까 수정
     @JsonManagedReference
     private List<RecipeSource> recipeSource = new ArrayList<>() ; // 여러 Source가 들어갈 수 있으니까 list로 수정
 

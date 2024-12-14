@@ -42,7 +42,10 @@ public class RecipeController {
     }
 
     @PutMapping
-    public void updateRecipe(@RequestBody RecipeUpdateRequest request){
-        recipeService.updateRecipe(request);
+    public void updateRecipe(
+            @RequestPart RecipeUpdateRequest request
+            ,@RequestPart (required =false) List<MultipartFile> files
+    ){
+        recipeService.updateRecipe(request,files);
     }
 }

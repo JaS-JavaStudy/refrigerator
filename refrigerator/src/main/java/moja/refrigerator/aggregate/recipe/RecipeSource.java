@@ -35,7 +35,7 @@ public class RecipeSource {
     @ManyToOne
     private RecipeSourceType recipeSourceType;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="recipe_pk")
     @JsonBackReference
     private Recipe recipe;

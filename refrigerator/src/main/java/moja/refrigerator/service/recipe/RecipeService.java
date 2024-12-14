@@ -16,5 +16,8 @@ public interface RecipeService {
     );
     List<RecipeResponse> getAllRecipes();
     void deleteRecipe(long recipePk);
-    void updateRecipe(RecipeUpdateRequest request);
+    void updateRecipe(
+            RecipeUpdateRequest request
+            ,List<MultipartFile> files
+    );
 }
