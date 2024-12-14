@@ -26,15 +26,17 @@ public class IngredientController {
 
     // 재료 등록
     @PostMapping
-    public void createIngredient(@RequestBody IngredientCreateRequest request) {
-        ingredientService.createIngredient(request);
+    public void createIngredient(
+            @RequestBody IngredientCreateRequest request,
+            @RequestParam Long userPk,
+            @RequestParam Long ingredientManagementPk) {
+        ingredientService.createIngredient(request, userPk, ingredientManagementPk);
     }
 
     // 재료 조회
     @GetMapping
-    public List<IngredientResponse> getIngredient() {
-        return ingredientService.getIngredient();
-
+    public List<IngredientResponse> getIngredient(@RequestParam Long userPk) {
+        return ingredientService.getIngredient(userPk);
     }
 
     // 재료 정보 수정
@@ -45,8 +47,8 @@ public class IngredientController {
 
     // 재료 삭제
     @DeleteMapping
-    public void deleteIngredient(@RequestParam long ingredientManagementPk) {
-        ingredientService.deleteIngredient(ingredientManagementPk);
+    public void deleteIngredient(@RequestParam Long ingredientMyRefrigeratorPk) {
+        ingredientService.deleteIngredient(ingredientMyRefrigeratorPk);
     }
 
     @PostMapping("/bookmark/regist")
