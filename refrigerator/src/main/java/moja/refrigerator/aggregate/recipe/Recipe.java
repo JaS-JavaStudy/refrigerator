@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -53,4 +54,7 @@ public class Recipe {
     @JoinColumn(name = "recipe_category")
     @ManyToOne
     private RecipeCategory recipeCategory;
+
+    @OneToMany(mappedBy = "recipe")
+    private List<RecipeIngredient> recipeIngredients;
 }
