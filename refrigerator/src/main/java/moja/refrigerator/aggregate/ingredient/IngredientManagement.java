@@ -16,12 +16,6 @@ public class IngredientManagement {
     @Column(name = "ingredient_name")
     private String ingredientName;
 
-    @Column(name = "expiration_date")
-    private String expirationDate;
-
-    @Column(name = "registration_date")
-    private String registrationDate;
-
     @Column(name = "season_date")
     private int seasonDate;
 

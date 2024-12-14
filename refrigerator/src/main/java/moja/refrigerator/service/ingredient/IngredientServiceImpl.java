@@ -1,17 +1,13 @@
 package moja.refrigerator.service.ingredient;
 
 import jakarta.persistence.EntityNotFoundException;
-import moja.refrigerator.aggregate.ingredient.IngredientBookmark;
-import moja.refrigerator.aggregate.ingredient.IngredientCategory;
-import moja.refrigerator.aggregate.ingredient.IngredientManagement;
-import moja.refrigerator.aggregate.ingredient.IngredientStorage;
+import moja.refrigerator.aggregate.ingredient.*;
 import moja.refrigerator.aggregate.user.User;
+import moja.refrigerator.repository.ingredient.*;
+
 import moja.refrigerator.dto.ingredient.request.*;
 import moja.refrigerator.dto.ingredient.response.*;
-import moja.refrigerator.repository.ingredient.IngredientBookmarkRepository;
-import moja.refrigerator.repository.ingredient.IngredientCategoryRepository;
-import moja.refrigerator.repository.ingredient.IngredientManagementRepository;
-import moja.refrigerator.repository.ingredient.IngredientStorageRepository;
+
 import moja.refrigerator.repository.user.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -20,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -27,88 +24,77 @@ import java.util.stream.Collectors;
 public class IngredientServiceImpl implements IngredientService{
 
     private IngredientManagementRepository ingredientManagementRepository;
-    private IngredientStorageRepository ingredientStorageRepository;
-    private IngredientCategoryRepository ingredientCategoryRepository;
     private IngredientBookmarkRepository ingredientBookmarkRepository;
+    private IngredientMyRefrigeratorRepository ingredientMyRefrigeratorRepository;
     private UserRepository userRepository;
     private ModelMapper mapper;
 
     @Autowired
     public IngredientServiceImpl(IngredientManagementRepository ingredientManagementRepository,
-                                 IngredientStorageRepository ingredientStorageRepository,
-                                 IngredientCategoryRepository ingredientCategoryRepository,
                                  IngredientBookmarkRepository ingredientBookmarkRepository,
+                                 IngredientMyRefrigeratorRepository ingredientMyRefrigeratorRepository,
                                  UserRepository userRepository,
                                  ModelMapper mapper) {
         this.ingredientManagementRepository = ingredientManagementRepository;
-        this.ingredientStorageRepository = ingredientStorageRepository;
-        this.ingredientCategoryRepository = ingredientCategoryRepository;
         this.ingredientBookmarkRepository = ingredientBookmarkRepository;
+        this.ingredientMyRefrigeratorRepository = ingredientMyRefrigeratorRepository;
         this.userRepository = userRepository;
         this.mapper = mapper;
     }
 
     @Override
     @Transactional
-    public void createIngredient(IngredientCreateRequest request) {
-        IngredientManagement ingredient = mapper.map(request, IngredientManagement.class);
+    public void createIngredient(IngredientCreateRequest request, Long userPk, Long ingredientManagementPk) {
+        IngredientMyRefrigerator myRefrigerator = mapper.map(request, IngredientMyRefrigerator.class);
 
-        IngredientCategory category = ingredientCategoryRepository.findById(request.getIngredientCategoryPk())
-                        .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
+        User user = userRepository.findById(userPk)
+                        .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        IngredientStorage storage = ingredientStorageRepository.findById(request.getIngredientStoragePk())
-                        .orElseThrow(() -> new IllegalArgumentException("해당 보관 방법을 찾을 수 없습니다."));
+        IngredientManagement ingredientManagement = ingredientManagementRepository.findById(ingredientManagementPk)
+                        .orElseThrow(() -> new IllegalArgumentException("재료를 찾을 수 없습니다."));
 
-        ingredient.setIngredientCategory(category);
-        ingredient.setIngredientStorage(storage);
+        myRefrigerator.setUser(user);
+        myRefrigerator.setIngredientManagement(ingredientManagement);
 
         // 재료를 JpaRepository의 save() 메소드로 DB에 저장 !
-        ingredientManagementRepository.save(ingredient);
+        ingredientMyRefrigeratorRepository.save(myRefrigerator);
     }
 
     @Transactional(readOnly = true)
-    public List<IngredientResponse> getIngredient() {
-        List<IngredientManagement> ingredients = ingredientManagementRepository.findAll();
+    public List<IngredientResponse> getIngredient(Long userPk) {
+        List<IngredientMyRefrigerator> ingredients = ingredientMyRefrigeratorRepository.findByUserUserPk(userPk);
+
+        AtomicInteger counter = new AtomicInteger(1);
 
         return ingredients.stream()
-                .map(ingredient -> mapper.map(ingredient, IngredientResponse.class))
+                .map(ingredient -> {
+                    IngredientResponse response = mapper.map(ingredient, IngredientResponse.class);
+                    response.setNumber(counter.getAndIncrement());
+                    response.setIngredientName(ingredient.getIngredientManagement().getIngredientName());
+                    response.setSeasonDate(ingredient.getIngredientManagement().getSeasonDate());
+                    response.setIngredientStorage(ingredient.getIngredientManagement().getIngredientStorage().getIngredientStorage());
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public void updateIngredient(IngredientUpdateRequest request) {
-        // 1. 수정할 재료 조회
-        IngredientManagement ingredient = ingredientManagementRepository
-                .findById(request.getIngredientManagementPk())
-                .orElseThrow(() -> new IllegalArgumentException("수정할 재료를 찾을 수 없습니다."));
+        IngredientMyRefrigerator ingredient = ingredientMyRefrigeratorRepository
+                .findById(request.getIngredientMyRefrigeratorPk())
+                .orElseThrow(() -> new EntityNotFoundException("수정할 재료를 찾을 수 없습니다."));
 
-        // 2. 새로운 카테고리와 저장소 조회
-        IngredientCategory newCategory = ingredientCategoryRepository.findById(request.getIngredientCategoryPk())
-                .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
-
-        IngredientStorage newStorage = ingredientStorageRepository.findById(request.getIngredientStoragePk())
-                .orElseThrow(() -> new IllegalArgumentException("해당 보관 방법을 찾을 수 없습니다."));
-
-        // 3. 기본 필드들 업데이트
-        ingredient.setIngredientName(request.getIngredientName());
-        ingredient.setExpirationDate(request.getExpirationDate());
-        ingredient.setRegistrationDate(request.getRegistrationDate());
-        ingredient.setSeasonDate(request.getSeasonDate());
-
-        // 4. 연관관계 설정
-        ingredient.setIngredientCategory(newCategory);
-        ingredient.setIngredientStorage(newStorage);
+        mapper.map(request, ingredient);
     }
 
     @Override
     @Transactional
-    public void deleteIngredient(long ingredientManagementPk) {
-        IngredientManagement ingredient = ingredientManagementRepository
-                .findById(ingredientManagementPk)
-                .orElseThrow(() -> new IllegalArgumentException("삭제할 재료를 찾을 수 없습니다."));
-
-        ingredientManagementRepository.delete(ingredient);
+    public void deleteIngredient(long ingredientMyRefrigeratorPk) {
+        if (!ingredientMyRefrigeratorRepository.existsById(ingredientMyRefrigeratorPk)) {
+            throw new EntityNotFoundException("삭제할 재료를 찾을 수 없습니다.");
+        }
+        ingredientMyRefrigeratorRepository.deleteById(ingredientMyRefrigeratorPk);
     }
 
     @Override
