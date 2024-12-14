@@ -3,6 +3,7 @@ package moja.refrigerator.controller.recipe;
 import moja.refrigerator.aggregate.recipe.Recipe;
 import moja.refrigerator.dto.recipe.request.RecipeCreateRequest;
 import moja.refrigerator.dto.recipe.request.RecipeUpdateRequest;
+import moja.refrigerator.dto.recipe.response.RecipeDetailResponse;
 import moja.refrigerator.dto.recipe.response.RecipeResponse;
 import moja.refrigerator.service.recipe.RecipeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,9 @@ public class RecipeController {
     public List<RecipeResponse> getAllRecipes(){
         return recipeService.getAllRecipes();
     }
+
+    @GetMapping("/{id}")
+    public RecipeDetailResponse getRecipe(@PathVariable long id){ return recipeService.getRecipe(id);}
 
     @DeleteMapping
     public void deleteRecipe(@RequestParam long recipePk){

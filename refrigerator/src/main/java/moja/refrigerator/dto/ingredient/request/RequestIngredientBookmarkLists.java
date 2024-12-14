@@ -3,7 +3,6 @@ package moja.refrigerator.dto.ingredient.request;
 import lombok.Data;
 
 @Data
-public class RequestRegistIngredientBookmark {
+public class RequestIngredientBookmarkLists {
     private long userPk;
-    private long ingredientMyRefrigeratorPk;
 }

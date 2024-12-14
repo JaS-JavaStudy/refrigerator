@@ -10,8 +10,10 @@ import moja.refrigerator.aggregate.recipe.RecipeCategory;
 import moja.refrigerator.aggregate.recipe.RecipeSource;
 import moja.refrigerator.aggregate.recipe.RecipeSourceType;
 import moja.refrigerator.aggregate.user.User;
+import moja.refrigerator.dto.ingredient.response.IngredientResponse;
 import moja.refrigerator.dto.recipe.request.RecipeCreateRequest;
 import moja.refrigerator.dto.recipe.request.RecipeUpdateRequest;
+import moja.refrigerator.dto.recipe.response.RecipeDetailResponse;
 import moja.refrigerator.dto.recipe.response.RecipeResponse;
 import moja.refrigerator.repository.recipe.RecipeCategoryRepository;
 import moja.refrigerator.repository.recipe.RecipeRepository;
@@ -156,9 +158,15 @@ public class RecipeServiceImpl implements RecipeService {
         return recipeRepository.findAll().stream()
                 .map(recipe -> mapper.map(recipe, RecipeResponse.class))
                 .collect(Collectors.toList());
-    };
+    }
 
-    @Override
+    public RecipeDetailResponse getRecipe(long id){
+        Recipe recipe = recipeRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("recipe not found"));
+        RecipeDetailResponse response = mapper.map(recipe,RecipeDetailResponse.class);
+        return response;
+    }
+
+                                          @Override
     public void deleteRecipe(long recipePk) {
         Recipe recipe = recipeRepository.findByRecipePk(recipePk)
                 .orElseThrow(IllegalArgumentException::new);

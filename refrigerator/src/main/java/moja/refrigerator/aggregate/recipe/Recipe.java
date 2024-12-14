@@ -61,4 +61,6 @@ public class Recipe {
     @ManyToOne
     private RecipeCategory recipeCategory;
 
+    @OneToMany(mappedBy = "recipe")
+    private List<RecipeIngredient> recipeIngredients;
 }
