@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class RequestRegistIngredientBookmark {
     private long userPk;
-    private long ingredientPk;
+    private long ingredientMyRefrigeratorPk;
 }

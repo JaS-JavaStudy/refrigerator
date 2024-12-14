@@ -19,6 +19,6 @@ public class IngredientBookmark {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "ingredient_management_pk")
-    private IngredientManagement ingredientManagement;
+    @JoinColumn(name = "ingredient_my_refrigerator_pk")
+    private IngredientMyRefrigerator ingredientMyRefrigerator;
 }

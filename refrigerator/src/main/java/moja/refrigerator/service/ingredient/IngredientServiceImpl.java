@@ -102,14 +102,14 @@ public class IngredientServiceImpl implements IngredientService{
         User user = userRepository.findById(requestBookmark.getUserPk())
                 .orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다."));
 
-        IngredientManagement ingredientManagement = ingredientManagementRepository
-                .findById(requestBookmark.getIngredientPk())
+        IngredientMyRefrigerator ingredientManagement = ingredientMyRefrigeratorRepository
+                .findById(requestBookmark.getIngredientMyRefrigeratorPk())
                 .orElseThrow(() -> new EntityNotFoundException("재료를 찾을 수 없습니다."));
 
         IngredientBookmark ingredientBookmark = new IngredientBookmark();
 
         ingredientBookmark.setUser(user);
-        ingredientBookmark.setIngredientManagement(ingredientManagement);
+        ingredientBookmark.setIngredientMyRefrigerator(ingredientManagement);
 
         ingredientBookmarkRepository.save(ingredientBookmark);
 
@@ -142,14 +142,14 @@ public class IngredientServiceImpl implements IngredientService{
 
         try {
             ingredientBookmarkRepository.deleteById(requestDeleteBookmark.getIngredientBookmarkPk());
-            String message = ingredientBookmark.getIngredientManagement()
-                    .getIngredientName() + " 재료의 즐겨찾기를 삭제했습니다";
+            String message = ingredientBookmark.getIngredientMyRefrigerator()
+                    .getIngredientManagement().getIngredientName() + " 재료의 즐겨찾기를 삭제했습니다";
             response.setMessage(message);
             return response;
         } catch (Exception e) {
             String message =
-                    ingredientBookmark.getIngredientManagement()
-                            .getIngredientName() + " 재료의 즐겨찾기를 삭제 실패했습니다";
+                    ingredientBookmark.getIngredientMyRefrigerator()
+                            .getIngredientManagement().getIngredientName() + " 재료의 즐겨찾기를 삭제 실패했습니다";
             response.setMessage(message);
             return response;
         }
