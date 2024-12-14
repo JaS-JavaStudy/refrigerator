@@ -1,10 +1,7 @@
 package moja.refrigerator.controller.ingredient;
 
-import moja.refrigerator.dto.ingredient.request.IngredientCreateRequest;
-import moja.refrigerator.dto.ingredient.request.IngredientUpdateRequest;
-import moja.refrigerator.dto.ingredient.request.RequestRegistIngredientBookmark;
-import moja.refrigerator.dto.ingredient.response.IngredientResponse;
-import moja.refrigerator.dto.ingredient.response.ResponseRegistIngredientBookmark;
+import moja.refrigerator.dto.ingredient.request.*;
+import moja.refrigerator.dto.ingredient.response.*;
 import moja.refrigerator.service.ingredient.IngredientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -59,6 +56,28 @@ public class IngredientController {
                 ingredientService.createIngredientBookmark(requestBookmark);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseBookmark);
+    }
+
+    @GetMapping("/bookmark")
+    public ResponseEntity<List<ResponseUsersIngredientBookmarkLists>> getUsersIngredientBookmarkList(
+            @RequestBody RequestIngredientBookmarkLists requestBookmarkLists
+    ) {
+        List<ResponseUsersIngredientBookmarkLists> responseBookmarkLists =
+                ingredientService.getUsersIngredientBookmarkLists(requestBookmarkLists);
+
+        return ResponseEntity.status(HttpStatus.OK).body(responseBookmarkLists);
+    }
+
+    @DeleteMapping("/bookmark/delete")
+    public ResponseEntity<ResponseDeleteIngredientBookmark> deleteIngredientBookmark(
+            @RequestBody RequestDeleteIngredientBookmark requestDeleteBookmark
+    ) {
+
+        ResponseDeleteIngredientBookmark responseDeleteIngredientBookmark =
+                ingredientService.deleteIngredientBookmark(requestDeleteBookmark);
+
+        System.out.println(responseDeleteIngredientBookmark.getMessage());
+        return ResponseEntity.status(HttpStatus.OK).body(responseDeleteIngredientBookmark);
     }
 
 }

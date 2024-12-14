@@ -3,12 +3,11 @@ package moja.refrigerator.service.ingredient;
 import jakarta.persistence.EntityNotFoundException;
 import moja.refrigerator.aggregate.ingredient.*;
 import moja.refrigerator.aggregate.user.User;
-import moja.refrigerator.dto.ingredient.request.IngredientCreateRequest;
-import moja.refrigerator.dto.ingredient.request.IngredientUpdateRequest;
-import moja.refrigerator.dto.ingredient.request.RequestRegistIngredientBookmark;
-import moja.refrigerator.dto.ingredient.response.IngredientResponse;
-import moja.refrigerator.dto.ingredient.response.ResponseRegistIngredientBookmark;
 import moja.refrigerator.repository.ingredient.*;
+
+import moja.refrigerator.dto.ingredient.request.*;
+import moja.refrigerator.dto.ingredient.response.*;
+
 import moja.refrigerator.repository.user.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -18,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -118,5 +118,40 @@ public class IngredientServiceImpl implements IngredientService{
         return mapper.map(ingredientBookmark, ResponseRegistIngredientBookmark.class);
     }
 
+    @Override
+    public List<ResponseUsersIngredientBookmarkLists> getUsersIngredientBookmarkLists(
+            RequestIngredientBookmarkLists requestBookmarkLists) {
+        List<IngredientBookmark> ingredientBookmarkLists = ingredientBookmarkRepository
+                .findAllByUser_UserPk(requestBookmarkLists.getUserPk());
 
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+
+        return ingredientBookmarkLists.stream().map(ingredientBookmark -> mapper
+                .map(ingredientBookmark, ResponseUsersIngredientBookmarkLists.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ResponseDeleteIngredientBookmark deleteIngredientBookmark(
+            RequestDeleteIngredientBookmark requestDeleteBookmark) {
+        IngredientBookmark ingredientBookmark = ingredientBookmarkRepository
+                .findById(requestDeleteBookmark.getIngredientBookmarkPk())
+                .orElseThrow(() -> new EntityNotFoundException("즐겨찾기를 찾을 수 없습니다."));
+
+        ResponseDeleteIngredientBookmark response = new ResponseDeleteIngredientBookmark();
+
+        try {
+            ingredientBookmarkRepository.deleteById(requestDeleteBookmark.getIngredientBookmarkPk());
+            String message = ingredientBookmark.getIngredientManagement()
+                    .getIngredientName() + " 재료의 즐겨찾기를 삭제했습니다";
+            response.setMessage(message);
+            return response;
+        } catch (Exception e) {
+            String message =
+                    ingredientBookmark.getIngredientManagement()
+                            .getIngredientName() + " 재료의 즐겨찾기를 삭제 실패했습니다";
+            response.setMessage(message);
+            return response;
+        }
+    }
 }
