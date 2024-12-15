@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface RecipeCategoryRepositoy extends JpaRepository<RecipeCategory,Integer> {
+public interface RecipeCategoryRepository extends JpaRepository<RecipeCategory,Integer> {
     Optional<RecipeCategory> findByRecipeCategory(String RecipeCategory);
 }
