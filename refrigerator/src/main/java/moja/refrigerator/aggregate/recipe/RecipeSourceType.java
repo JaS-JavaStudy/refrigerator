@@ -8,6 +8,7 @@ import lombok.Data;
 @Entity
 @Data
 public class RecipeSourceType {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "recipe_source_type_pk")

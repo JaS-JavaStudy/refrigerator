@@ -8,6 +8,7 @@ import moja.refrigerator.dto.recipe.response.RecipeResponse;
 import moja.refrigerator.service.recipe.RecipeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,8 +23,13 @@ public class RecipeController {
     }
 
     @PostMapping
-    public void createRecipe(@RequestBody RecipeCreateRequest request){
-        recipeService.createRecipe(request);
+    public void createRecipe(
+            @RequestPart RecipeCreateRequest request
+            , @RequestPart (required =false) List<MultipartFile> files
+    ){
+        recipeService.createRecipe(request
+                , files
+        );
     }
 
     @GetMapping
@@ -40,7 +46,10 @@ public class RecipeController {
     }
 
     @PutMapping
-    public void updateRecipe(@RequestBody RecipeUpdateRequest request){
-        recipeService.updateRecipe(request);
+    public void updateRecipe(
+            @RequestPart RecipeUpdateRequest request
+            ,@RequestPart (required =false) List<MultipartFile> files
+    ){
+        recipeService.updateRecipe(request,files);
     }
 }
