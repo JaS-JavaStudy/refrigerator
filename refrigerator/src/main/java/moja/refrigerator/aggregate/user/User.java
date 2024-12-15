@@ -31,8 +31,6 @@ public class User {
     @CreationTimestamp
     private LocalDate joinDate;
 
-//    @Column(name = "leave_date")
-//    private LocalDate leaveDate;
-
-
+    @Column(name = "user_role")
+    private String userRole = "ROLE_USER";
 }

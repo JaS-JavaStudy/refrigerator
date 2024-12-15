@@ -4,6 +4,7 @@ import moja.refrigerator.aggregate.recipe.Recipe;
 import moja.refrigerator.dto.recipe.request.RecipeCreateRequest;
 import moja.refrigerator.dto.recipe.request.RecipeUpdateRequest;
 import moja.refrigerator.dto.recipe.response.RecipeDetailResponse;
+import moja.refrigerator.dto.recipe.response.RecipeRecommendResponse;
 import moja.refrigerator.dto.recipe.response.RecipeResponse;
 import moja.refrigerator.service.recipe.RecipeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,5 +52,10 @@ public class RecipeController {
             ,@RequestPart (required =false) List<MultipartFile> files
     ){
         recipeService.updateRecipe(request,files);
+    }
+
+    @GetMapping("/recommend")
+    public List<RecipeRecommendResponse> getRecommendedRecipes(@RequestParam Long userPk) {
+        return recipeService.getRecommendedRecipes(userPk);
     }
 }
