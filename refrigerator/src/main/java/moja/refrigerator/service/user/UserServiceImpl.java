@@ -39,6 +39,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+
     private void checkDuplicateUser(UserCreateRequest request) {
         List<String> errors = new ArrayList<>();
         if (userRepository.existsByUserId(request.getUserId())) {
