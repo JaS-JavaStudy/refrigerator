@@ -8,8 +8,9 @@ public class IngredientResponse {
     private int number;
     private long ingredientMyRefrigeratorPk;
     private String ingredientName;
-    private int ingredientAmount;
+    private float ingredientAmount;
     private String expirationDate;
+    private long remainExpirationDate;
     private int seasonDate;
     private String ingredientStorage;
 

@@ -15,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Optional;
@@ -56,7 +59,7 @@ public class IngredientServiceImpl implements IngredientService{
         myRefrigerator.setUser(user);
         myRefrigerator.setIngredientManagement(ingredientManagement);
 
-        // 재료를 JpaRepository의 save() 메소드로 DB에 저장 !
+        // 재료를 JpaRepository 의 save() 메소드로 DB에 저장 !
         ingredientMyRefrigeratorRepository.save(myRefrigerator);
     }
 
@@ -64,6 +67,7 @@ public class IngredientServiceImpl implements IngredientService{
     public List<IngredientResponse> getIngredient(Long userPk) {
         List<IngredientMyRefrigerator> ingredients = ingredientMyRefrigeratorRepository.findByUserUserPk(userPk);
 
+        LocalDate currentDate = LocalDate.now();
         AtomicInteger counter = new AtomicInteger(1);
 
         return ingredients.stream()
@@ -73,8 +77,16 @@ public class IngredientServiceImpl implements IngredientService{
                     response.setIngredientName(ingredient.getIngredientManagement().getIngredientName());
                     response.setSeasonDate(ingredient.getIngredientManagement().getSeasonDate());
                     response.setIngredientStorage(ingredient.getIngredientManagement().getIngredientStorage().getIngredientStorage());
+
+                    // 현재 날짜 기준, 유통기한 남은 일수 계산
+                    LocalDate expirationDate = LocalDate.parse(ingredient.getExpirationDate());
+                    long remainExpirationDate = ChronoUnit.DAYS.between(currentDate, expirationDate);
+                    response.setRemainExpirationDate(remainExpirationDate);
+
                     return response;
                 })
+                // 남은 일수 기준 오름차순 정렬
+                .sorted(Comparator.comparingLong(IngredientResponse::getRemainExpirationDate))
                 .collect(Collectors.toList());
     }
 
@@ -90,11 +102,25 @@ public class IngredientServiceImpl implements IngredientService{
 
     @Override
     @Transactional
-    public void deleteIngredient(long ingredientMyRefrigeratorPk) {
-        if (!ingredientMyRefrigeratorRepository.existsById(ingredientMyRefrigeratorPk)) {
-            throw new EntityNotFoundException("삭제할 재료를 찾을 수 없습니다.");
+    public void deleteIngredient(IngredientDeleteRequest request) {
+        IngredientMyRefrigerator ingredient = ingredientMyRefrigeratorRepository
+                .findById(request.getIngredientMyRefrigeratorPk())
+                .orElseThrow(() -> new IllegalArgumentException("삭제할 재료를 찾을 수 없습니다."));
+
+        float currentAmount = ingredient.getIngredientAmount();
+        float deleteAmount = request.getDeleteAmount();
+
+        if (currentAmount < deleteAmount) {
+            throw new IllegalArgumentException("삭제할 수량이 현재 보유 수량보다 많습니다.");
         }
-        ingredientMyRefrigeratorRepository.deleteById(ingredientMyRefrigeratorPk);
+        // 삭제할 수량이 딱 맞아 떨어지면 재료를 완전 삭제
+        if (currentAmount == deleteAmount) {
+            ingredientMyRefrigeratorRepository.deleteById(request.getIngredientMyRefrigeratorPk());
+        } else {
+            // 현재 수량 - 삭제할 수량의 계산 결과를 저장
+            ingredient.setIngredientAmount(currentAmount - deleteAmount);
+            ingredientMyRefrigeratorRepository.save(ingredient);
+        }
     }
 
     @Override
