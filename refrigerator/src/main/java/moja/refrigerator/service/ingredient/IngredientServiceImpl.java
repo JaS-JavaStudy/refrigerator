@@ -102,11 +102,25 @@ public class IngredientServiceImpl implements IngredientService{
 
     @Override
     @Transactional
-    public void deleteIngredient(long ingredientMyRefrigeratorPk) {
-        if (!ingredientMyRefrigeratorRepository.existsById(ingredientMyRefrigeratorPk)) {
-            throw new EntityNotFoundException("삭제할 재료를 찾을 수 없습니다.");
+    public void deleteIngredient(IngredientDeleteRequest request) {
+        IngredientMyRefrigerator ingredient = ingredientMyRefrigeratorRepository
+                .findById(request.getIngredientMyRefrigeratorPk())
+                .orElseThrow(() -> new IllegalArgumentException("삭제할 재료를 찾을 수 없습니다."));
+
+        float currentAmount = ingredient.getIngredientAmount();
+        float deleteAmount = request.getDeleteAmount();
+
+        if (currentAmount < deleteAmount) {
+            throw new IllegalArgumentException("삭제할 수량이 현재 보유 수량보다 많습니다.");
         }
-        ingredientMyRefrigeratorRepository.deleteById(ingredientMyRefrigeratorPk);
+        // 삭제할 수량이 딱 맞아 떨어지면 재료를 완전 삭제
+        if (currentAmount == deleteAmount) {
+            ingredientMyRefrigeratorRepository.deleteById(request.getIngredientMyRefrigeratorPk());
+        } else {
+            // 현재 수량 - 삭제할 수량의 계산 결과를 저장
+            ingredient.setIngredientAmount(currentAmount - deleteAmount);
+            ingredientMyRefrigeratorRepository.save(ingredient);
+        }
     }
 
     @Override
