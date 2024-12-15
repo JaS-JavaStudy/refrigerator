@@ -1,5 +1,6 @@
 package moja.refrigerator.controller.ingredient;
 
+import jakarta.persistence.EntityNotFoundException;
 import moja.refrigerator.dto.ingredient.request.*;
 import moja.refrigerator.dto.ingredient.response.*;
 import moja.refrigerator.service.ingredient.IngredientService;
@@ -44,8 +45,15 @@ public class IngredientController {
 
     // 재료 삭제
     @DeleteMapping
-    public void deleteIngredient(@RequestParam Long ingredientMyRefrigeratorPk) {
-        ingredientService.deleteIngredient(ingredientMyRefrigeratorPk);
+    public ResponseEntity<String> deleteIngredient(@RequestBody IngredientDeleteRequest request) {
+        try {
+            ingredientService.deleteIngredient(request);
+            return ResponseEntity.ok("재료가 성공적으로 삭제되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("/bookmark/regist")

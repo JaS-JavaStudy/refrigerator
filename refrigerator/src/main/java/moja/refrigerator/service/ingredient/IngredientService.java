@@ -14,7 +14,7 @@ public interface IngredientService {
     List<IngredientResponse> getIngredient(Long userPk); // 재료 조회 메서드
     void updateIngredient(IngredientUpdateRequest request);
 
-    void deleteIngredient(long ingredientMyRefrigeratorPk);
+    void deleteIngredient(IngredientDeleteRequest request);
 
     List<ResponseUsersIngredientBookmarkLists> getUsersIngredientBookmarkLists(
             RequestIngredientBookmarkLists requestBookmarkLists);
