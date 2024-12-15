@@ -35,6 +35,7 @@ public class UserServiceImpl implements UserService {
 
         // 비밀번호 암호화
         user.setUserPw(passwordEncoder.encode(request.getUserPw()));
+        user.setUserRole("ROLE_USER");
 
         userRepository.save(user);
     }
