@@ -15,10 +15,11 @@ public class UserController {
         this.userService = userService;
     }
 
-//    @GetMapping("/")
-//    public String getMainPage() {
-//        return "user Controller";
-//    }
+    // 토큰 검증 로직 확인용
+    @GetMapping("/")
+    public String getMainPage() {
+        return "user Controller";
+    }
 
     // 회원 가입 처리
     @PostMapping("/auth/join")
