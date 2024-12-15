@@ -24,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -245,7 +247,6 @@ public class RecipeServiceImpl implements RecipeService {
     public List<RecipeRecommendResponse> getRecommendedRecipes(Long userPk) {
         List<IngredientMyRefrigerator> userIngredients =
                 ingredientMyRefrigeratorRepository.findByUserUserPk(userPk);
-
         List<Recipe> allRecipes = recipeRepository.findAll();
 
         return allRecipes.stream()
@@ -254,71 +255,65 @@ public class RecipeServiceImpl implements RecipeService {
                 .map(result -> {
                     RecipeRecommendResponse response = mapper.map(result.getRecipe(), RecipeRecommendResponse.class);
                     response.setMatchRate(result.getMatchRate());
-                    response.setUrgentIngredient(result.getUrgentIngredient());        // 추가
-                    response.setUrgentExpirationDate(result.getUrgentExpirationDate()); // 추가
+                    response.setRemainExpirationDays(result.getRemainExpirationDays());
+                    response.setUrgentIngredientName(result.getUrgentIngredientName());
                     return response;
                 })
+                .sorted(Comparator.comparingLong(RecipeRecommendResponse::getRemainExpirationDays))
                 .collect(Collectors.toList());
     }
 
     private RecipeMatchResult checkRecipeMatch(Recipe recipe, List<IngredientMyRefrigerator> userIngredients) {
         List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(recipe);
+        LocalDate currentDate = LocalDate.now();
 
         if (recipeIngredients.isEmpty()) {
-            return new RecipeMatchResult(recipe, false, 0, null, null);
+            return new RecipeMatchResult(recipe, false, 0, 0, null);
         }
-
-        // 사용자가 가진 재료의 ID 목록과 유통기한 정보
-        Map<Long, IngredientMyRefrigerator> userIngredientMap = new HashMap<>();
-        for (IngredientMyRefrigerator ingredient : userIngredients) {
-            Long ingredientId = ingredient.getIngredientManagement().getIngredientManagementPk();
-            userIngredientMap.put(ingredientId, ingredient);
-        }
-
-        // 1. 필수 재료 체크
-        List<RecipeIngredient> necessaryIngredients = recipeIngredients.stream()
-                .filter(RecipeIngredient::isIngredientIsNecessary)
-                .toList();
-
 
         boolean hasAllNecessaryIngredients = true;
-        for (RecipeIngredient necessary : necessaryIngredients) {
-            Long necessaryIngredientId = necessary.getIngredientManagement().getIngredientManagementPk();
-            if (!userIngredientMap.containsKey(necessaryIngredientId)) {
+        int matchedCount = 0;
+        long shortestRemainDays = Long.MAX_VALUE;
+        String urgentIngredientName = null;
+
+        for (RecipeIngredient recipeIngredient : recipeIngredients) {
+            boolean hasIngredient = false;
+
+            for (IngredientMyRefrigerator userIngredient : userIngredients) {
+                if (userIngredient.getIngredientManagement().getIngredientManagementPk() ==
+                        recipeIngredient.getIngredientManagement().getIngredientManagementPk()) {
+
+                    hasIngredient = true;
+                    matchedCount++;
+
+                    // 남은 일수 계산
+                    LocalDate expirationDate = LocalDate.parse(userIngredient.getExpirationDate());
+                    long remainDays = ChronoUnit.DAYS.between(currentDate, expirationDate);
+
+                    // 더 짧은 유통기한 발견시 정보 업데이트
+                    if (remainDays < shortestRemainDays) {
+                        shortestRemainDays = remainDays;
+                        urgentIngredientName = userIngredient.getIngredientManagement().getIngredientName();
+                    }
+                    break;
+                }
+            }
+
+            if (recipeIngredient.isIngredientIsNecessary() && !hasIngredient) {
                 hasAllNecessaryIngredients = false;
                 break;
             }
         }
 
-        // 2. 전체 재료 매칭률 계산
-        long matchedCount = recipeIngredients.stream()
-                .filter(ri -> userIngredientMap.containsKey(
-                        ri.getIngredientManagement().getIngredientManagementPk()))
-                .count();
-
-        double matchRate = (double) matchedCount / recipeIngredients.size() * 100;
-
-        // 3. 가장 유통기한이 임박한 재료 찾기
-        String urgentIngredient = null;
-        String urgentExpirationDate = null;
-
-        if (hasAllNecessaryIngredients && matchRate >= 66) {
-            Optional<IngredientMyRefrigerator> mostUrgentIngredient = recipeIngredients.stream()
-                    .map(ri -> ri.getIngredientManagement().getIngredientManagementPk())
-                    .filter(userIngredientMap::containsKey)
-                    .map(userIngredientMap::get)
-                    .min(Comparator.comparing(IngredientMyRefrigerator::getExpirationDate));
-
-            if (mostUrgentIngredient.isPresent()) {
-                IngredientMyRefrigerator urgent = mostUrgentIngredient.get();
-                urgentIngredient = urgent.getIngredientManagement().getIngredientName();
-                urgentExpirationDate = urgent.getExpirationDate();
-            }
-        }
-
-        // 4. 최종 판단: 필수 재료 모두 있고 매칭률 66% 이상
+        double matchRate = ((double) matchedCount / recipeIngredients.size()) * 100;
         boolean isMatched = hasAllNecessaryIngredients && matchRate >= 66;
 
-        return new RecipeMatchResult(recipe, isMatched, matchRate, urgentIngredient, urgentExpirationDate);
+        return new RecipeMatchResult(
+                recipe,
+                isMatched,
+                matchRate,
+                isMatched ? shortestRemainDays : 0,
+                isMatched ? urgentIngredientName : null
+        );
     }
 }

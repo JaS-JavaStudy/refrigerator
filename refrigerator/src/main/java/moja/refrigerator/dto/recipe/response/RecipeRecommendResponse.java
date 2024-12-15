@@ -9,6 +9,6 @@ public class RecipeRecommendResponse {
     private String recipeContent;
     private int recipeCookingTime;
     private double matchRate;
-    private String urgentIngredient;
-    private String urgentExpirationDate;
+    private long remainExpirationDays;
+    private String urgentIngredientName;
 }
