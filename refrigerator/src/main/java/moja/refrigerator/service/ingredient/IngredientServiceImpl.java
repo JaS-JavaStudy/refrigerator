@@ -15,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Optional;
@@ -56,7 +59,7 @@ public class IngredientServiceImpl implements IngredientService{
         myRefrigerator.setUser(user);
         myRefrigerator.setIngredientManagement(ingredientManagement);
 
-        // 재료를 JpaRepository의 save() 메소드로 DB에 저장 !
+        // 재료를 JpaRepository 의 save() 메소드로 DB에 저장 !
         ingredientMyRefrigeratorRepository.save(myRefrigerator);
     }
 
@@ -64,6 +67,7 @@ public class IngredientServiceImpl implements IngredientService{
     public List<IngredientResponse> getIngredient(Long userPk) {
         List<IngredientMyRefrigerator> ingredients = ingredientMyRefrigeratorRepository.findByUserUserPk(userPk);
 
+        LocalDate currentDate = LocalDate.now();
         AtomicInteger counter = new AtomicInteger(1);
 
         return ingredients.stream()
@@ -73,8 +77,16 @@ public class IngredientServiceImpl implements IngredientService{
                     response.setIngredientName(ingredient.getIngredientManagement().getIngredientName());
                     response.setSeasonDate(ingredient.getIngredientManagement().getSeasonDate());
                     response.setIngredientStorage(ingredient.getIngredientManagement().getIngredientStorage().getIngredientStorage());
+
+                    // 현재 날짜 기준, 유통기한 남은 일수 계산
+                    LocalDate expirationDate = LocalDate.parse(ingredient.getExpirationDate());
+                    long remainExpirationDate = ChronoUnit.DAYS.between(currentDate, expirationDate);
+                    response.setRemainExpirationDate(remainExpirationDate);
+
                     return response;
                 })
+                // 남은 일수 기준 오름차순 정렬
+                .sorted(Comparator.comparingLong(IngredientResponse::getRemainExpirationDate))
                 .collect(Collectors.toList());
     }
 
