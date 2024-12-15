@@ -3,6 +3,7 @@ package moja.refrigerator.aggregate.recipe;
 import jakarta.persistence.*;
 import lombok.Data;
 import moja.refrigerator.aggregate.ingredient.IngredientManagement;
+import moja.refrigerator.aggregate.ingredient.IngredientMyRefrigerator;
 
 @Data
 @Entity
@@ -19,6 +20,7 @@ public class RecipeIngredient {
     @JoinColumn(name = "ingredient_management")
     @ManyToOne
     private IngredientManagement ingredientManagement;
+//    private IngredientMyRefrigerator ingredientMyRefrigerator ;
 
     @JoinColumn(name = "recipe")
     @ManyToOne
