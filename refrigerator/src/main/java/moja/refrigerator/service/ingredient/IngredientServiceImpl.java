@@ -180,4 +180,14 @@ public class IngredientServiceImpl implements IngredientService{
             return response;
         }
     }
+
+    @Override
+    public ResponseAlertExpirationDate alertExpirationDate(
+            RequestAlertExpirationDate requestAlertExpirationDate) {
+        // 1. 현재일 찾기
+        // 2. 내 냉장고 전채 조회
+        // 3. 남은 유통기한 계산
+        // 4. 리턴
+        return null;
+    }
 }

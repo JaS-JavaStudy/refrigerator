@@ -20,4 +20,6 @@ public interface IngredientService {
             RequestIngredientBookmarkLists requestBookmarkLists);
 
     ResponseDeleteIngredientBookmark deleteIngredientBookmark(RequestDeleteIngredientBookmark requestDeleteBookmark);
+
+    ResponseAlertExpirationDate alertExpirationDate(RequestAlertExpirationDate requestAlertExpirationDate);
 }
