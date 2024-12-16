@@ -2,8 +2,10 @@ package moja.refrigerator.service.recipe;
 
 import moja.refrigerator.aggregate.recipe.Recipe;
 import moja.refrigerator.dto.recipe.request.RecipeCreateRequest;
+import moja.refrigerator.dto.recipe.request.RecipeLikeRequest;
 import moja.refrigerator.dto.recipe.request.RecipeUpdateRequest;
 import moja.refrigerator.dto.recipe.response.RecipeDetailResponse;
+import moja.refrigerator.dto.recipe.response.RecipeLikeResponse;
 import moja.refrigerator.dto.recipe.response.RecipeRecommendResponse;
 import moja.refrigerator.dto.recipe.response.RecipeResponse;
 import moja.refrigerator.repository.recipe.RecipeRepository;
@@ -25,4 +27,5 @@ public interface RecipeService {
     );
     List<RecipeRecommendResponse> getRecommendedRecipes(Long userPk);
     RecipeRecommendResponse getRandomRecipe();
+    RecipeLikeResponse toggleLikeDislike(RecipeLikeRequest request);
 }
