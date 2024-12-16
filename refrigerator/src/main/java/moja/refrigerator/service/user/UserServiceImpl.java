@@ -1,13 +1,15 @@
 package moja.refrigerator.service.user;
 
-import jakarta.servlet.http.HttpServletRequest;
-import moja.refrigerator.aggregate.user.TokenBlacklist;
 import moja.refrigerator.aggregate.user.User;
 import moja.refrigerator.dto.user.request.UserCreateRequest;
+import moja.refrigerator.dto.user.request.UserUpdateRequest;
 import moja.refrigerator.exception.user.DuplicateUserException;
 import moja.refrigerator.repository.user.TokenBlacklistRepository;
 import moja.refrigerator.repository.user.UserRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +22,11 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
-    private final TokenBlacklistRepository tokenBlacklistRepository;
 
-    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, ModelMapper modelMapper, TokenBlacklistRepository tokenBlacklistRepository) {
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, ModelMapper modelMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
-        this.tokenBlacklistRepository = tokenBlacklistRepository;
     }
 
     @Override
@@ -43,6 +43,35 @@ public class UserServiceImpl implements UserService {
         user.setUserRole("ROLE_USER");
 
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void updateUser(UserUpdateRequest request) {
+        // 현재 로그인한 사용자 정보 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
+
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+        // 이메일 변경 요청이 있는 경우
+        if (request.getUserEmail() != null) {
+            if (!request.getUserEmail().equals(user.getUserEmail())
+                    && userRepository.existsByUserEmail(request.getUserEmail())) {
+                throw new DuplicateUserException("이미 사용 중인 이메일입니다.");
+            }
+            user.setUserEmail(request.getUserEmail());
+        }
+
+        // 닉네임 변경 요청이 있는 경우
+        if (request.getUserNickname() != null) {
+            if (!request.getUserNickname().equals(user.getUserNickname())
+                    && userRepository.existsByUserNickname(request.getUserNickname())) {
+                throw new DuplicateUserException("이미 사용 중인 닉네임입니다.");
+            }
+            user.setUserNickname(request.getUserNickname());
+        }
     }
 
     private void checkDuplicateUser(UserCreateRequest request) {
