@@ -1,8 +1,11 @@
 package moja.refrigerator.service.user;
 
+import jakarta.servlet.http.HttpServletRequest;
+import moja.refrigerator.aggregate.user.TokenBlacklist;
 import moja.refrigerator.aggregate.user.User;
 import moja.refrigerator.dto.user.request.UserCreateRequest;
 import moja.refrigerator.exception.user.DuplicateUserException;
+import moja.refrigerator.repository.user.TokenBlacklistRepository;
 import moja.refrigerator.repository.user.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,11 +20,13 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
+    private final TokenBlacklistRepository tokenBlacklistRepository;
 
-    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, ModelMapper modelMapper) {
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, ModelMapper modelMapper, TokenBlacklistRepository tokenBlacklistRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
+        this.tokenBlacklistRepository = tokenBlacklistRepository;
     }
 
     @Override
@@ -39,7 +44,6 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
     }
-
 
     private void checkDuplicateUser(UserCreateRequest request) {
         List<String> errors = new ArrayList<>();

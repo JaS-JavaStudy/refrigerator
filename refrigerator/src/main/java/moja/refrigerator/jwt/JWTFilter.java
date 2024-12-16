@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import moja.refrigerator.aggregate.user.User;
 import moja.refrigerator.dto.user.CustomUserDetails;
+import moja.refrigerator.repository.user.TokenBlacklistRepository;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,9 +16,11 @@ import java.io.IOException;
 
 public class JWTFilter extends OncePerRequestFilter {
     private final JWTUtil jwtUtil;
+    private final TokenBlacklistRepository tokenBlacklistRepository;
 
-    public JWTFilter(JWTUtil jwtUtil) {
+    public JWTFilter(JWTUtil jwtUtil, TokenBlacklistRepository tokenBlacklistRepository) {
         this.jwtUtil = jwtUtil;
+        this.tokenBlacklistRepository = tokenBlacklistRepository;
     }
 
     @Override
@@ -32,6 +35,12 @@ public class JWTFilter extends OncePerRequestFilter {
         }
 
         String token = authorization.split(" ")[1];
+
+        // 블랙리스트 체크
+        if (tokenBlacklistRepository.existsByBlacklistToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
         // 토큰 소멸 시간 검증
         if (jwtUtil.isExpired(token)) {
