@@ -8,11 +8,9 @@ import moja.refrigerator.aggregate.recipe.*;
 import moja.refrigerator.aggregate.user.User;
 import moja.refrigerator.dto.recipe.RecipeMatchResult;
 import moja.refrigerator.dto.recipe.request.RecipeCreateRequest;
+import moja.refrigerator.dto.recipe.request.RecipeLikeRequest;
 import moja.refrigerator.dto.recipe.request.RecipeUpdateRequest;
-import moja.refrigerator.dto.recipe.response.RecipeDetailResponse;
-import moja.refrigerator.dto.recipe.response.RecipeIngredientInfo;
-import moja.refrigerator.dto.recipe.response.RecipeRecommendResponse;
-import moja.refrigerator.dto.recipe.response.RecipeResponse;
+import moja.refrigerator.dto.recipe.response.*;
 import moja.refrigerator.repository.ingredient.IngredientMyRefrigeratorRepository;
 import moja.refrigerator.repository.recipe.*;
 import moja.refrigerator.repository.user.UserRepository;
@@ -43,6 +41,7 @@ public class RecipeServiceImpl implements RecipeService {
     private final IngredientMyRefrigeratorRepository ingredientMyRefrigeratorRepository;
     private final RecipeIngredientRepository recipeIngredientRepository;
     private final ReplacableIngredientRepository replacableIngredientRepository;
+    private final RecipeLikeDislikeRepository recipeLikeDislikeRepository;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -58,7 +57,8 @@ public class RecipeServiceImpl implements RecipeService {
             AmazonS3Client amazonS3Client,
             IngredientMyRefrigeratorRepository ingredientMyRefrigeratorRepository,
             RecipeIngredientRepository recipeIngredientRepository,
-            ReplacableIngredientRepository replacableIngredientRepository
+            ReplacableIngredientRepository replacableIngredientRepository,
+            RecipeLikeDislikeRepository recipeLikeDislikeRepository
     ) {
         this.recipeRepository = recipeRepository;
         this.userRepository = userRepository;
@@ -70,8 +70,8 @@ public class RecipeServiceImpl implements RecipeService {
         this.ingredientMyRefrigeratorRepository = ingredientMyRefrigeratorRepository;
         this.recipeIngredientRepository = recipeIngredientRepository;
         this.replacableIngredientRepository = replacableIngredientRepository;
+        this.recipeLikeDislikeRepository = recipeLikeDislikeRepository;
     }
-
     private boolean isImageFile(String fileName) {
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
         return List.of("jpg", "jpeg", "png", "gif").contains(extension);
@@ -346,6 +346,39 @@ public class RecipeServiceImpl implements RecipeService {
         response.setIngredients(ingredientInfoList);
 
         return response;
+    }
+
+    @Override
+    @Transactional
+    public RecipeLikeResponse toggleLikeDislike(RecipeLikeRequest request) {
+        Recipe recipe = recipeRepository.findById(request.getRecipePk())
+                .orElseThrow(() -> new IllegalArgumentException("레시피를 찾을 수 없습니다."));
+
+        User user = userRepository.findById(request.getUserPk())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        Optional<RecipeLikeDislike> existing =
+                recipeLikeDislikeRepository.findByRecipeAndUser(recipe, user);
+
+        if (existing.isPresent()) {
+            if (existing.get().getLikeStatus() == request.getLikeStatus()) {
+                recipeLikeDislikeRepository.delete(existing.get());
+            } else {
+                existing.get().setLikeStatus(request.getLikeStatus());
+            }
+        } else {
+            RecipeLikeDislike newReaction = new RecipeLikeDislike();
+            newReaction.setRecipe(recipe);
+            newReaction.setUser(user);
+            newReaction.setLikeStatus(request.getLikeStatus());
+            recipeLikeDislikeRepository.save(newReaction);
+        }
+
+        // 현재 좋아요/싫어요 수 계산
+        long likes = recipeLikeDislikeRepository.countByRecipeAndLikeStatus(recipe, true);
+        long dislikes = recipeLikeDislikeRepository.countByRecipeAndLikeStatus(recipe, false);
+
+        return new RecipeLikeResponse(likes, dislikes, request.getLikeStatus());
     }
 
 }
