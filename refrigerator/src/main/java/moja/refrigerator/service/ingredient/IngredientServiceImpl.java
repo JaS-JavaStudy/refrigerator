@@ -16,11 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -179,5 +178,43 @@ public class IngredientServiceImpl implements IngredientService{
             response.setMessage(message);
             return response;
         }
+    }
+
+    @Override
+    public List<ResponseAlertExpirationDate> alertExpirationDate(
+            RequestAlertExpirationDate requestAlertExpirationDate) {
+        // 1. 현재일 찾기
+        LocalDate currentDate = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd"); // 원하는 포맷 지정
+        String dateString = currentDate.format(formatter);
+
+        // 2. 내 냉장고 전채 조회
+        List<IngredientMyRefrigerator> refrigeratorList = ingredientMyRefrigeratorRepository
+                .findByUserUserPk(requestAlertExpirationDate.getUserPk());
+
+        List<ResponseAlertExpirationDate> responseAlertExpirationDates = new ArrayList<>();
+        // 3. 남은 유통기한 계산
+        for (IngredientMyRefrigerator ingredientMyRefrigerator : refrigeratorList) {
+            LocalDate expirationDate = LocalDate.parse(ingredientMyRefrigerator.getExpirationDate(), formatter);
+
+            long daysUntilExpiration = ChronoUnit.DAYS.between(currentDate, expirationDate);
+
+            if (daysUntilExpiration == 7 || daysUntilExpiration == 3) {
+                // ResponseAlertExpirationDate 객체 생성
+                ResponseAlertExpirationDate response = new ResponseAlertExpirationDate(
+                        ingredientMyRefrigerator.getIngredientMyRefrigeratorPk(),
+                        ingredientMyRefrigerator.getIngredientManagement(),
+                        ingredientMyRefrigerator.getIngredientAmount(),
+                        ingredientMyRefrigerator.getExpirationDate(),
+                        (int) daysUntilExpiration // daysUntilExpiration을 int로 변환
+                );
+
+                // 리스트에 추가
+                responseAlertExpirationDates.add(response);
+            }
+
+        }
+        // 4. 리턴
+        return responseAlertExpirationDates;
     }
 }

@@ -88,4 +88,14 @@ public class IngredientController {
         return ResponseEntity.status(HttpStatus.OK).body(responseDeleteIngredientBookmark);
     }
 
+    @GetMapping("/alert")
+    public ResponseEntity<List<ResponseAlertExpirationDate>> alertExpirationDate(
+            @RequestBody RequestAlertExpirationDate requestAlertExpirationDate
+    ) {
+        List<ResponseAlertExpirationDate> responseAlertExpirationDate =
+                ingredientService.alertExpirationDate(requestAlertExpirationDate);
+
+        return ResponseEntity.status(HttpStatus.OK).body(responseAlertExpirationDate);
+    }
+
 }
