@@ -10,6 +10,7 @@ import moja.refrigerator.dto.recipe.RecipeMatchResult;
 import moja.refrigerator.dto.recipe.request.RecipeCreateRequest;
 import moja.refrigerator.dto.recipe.request.RecipeUpdateRequest;
 import moja.refrigerator.dto.recipe.response.RecipeDetailResponse;
+import moja.refrigerator.dto.recipe.response.RecipeIngredientInfo;
 import moja.refrigerator.dto.recipe.response.RecipeRecommendResponse;
 import moja.refrigerator.dto.recipe.response.RecipeResponse;
 import moja.refrigerator.repository.ingredient.IngredientMyRefrigeratorRepository;
@@ -316,4 +317,35 @@ public class RecipeServiceImpl implements RecipeService {
                 isMatched ? urgentIngredientName : null
         );
     }
+    @Override
+    public RecipeRecommendResponse getRandomRecipe() {
+        List<Recipe> allRecipes = recipeRepository.findAll();
+
+        if (allRecipes.isEmpty()) {
+            throw new IllegalStateException("등록된 레시피가 없습니다.");
+        }
+
+        Random random = new Random();
+        int randomIndex = random.nextInt(allRecipes.size());
+        Recipe selectedRecipe = allRecipes.get(randomIndex);
+
+        // Response 객체로 변환
+        RecipeRecommendResponse response = mapper.map(selectedRecipe, RecipeRecommendResponse.class);
+
+        // 재료 정보 추가
+        List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(selectedRecipe);
+        List<RecipeIngredientInfo> ingredientInfoList = recipeIngredients.stream()
+                .map(ri -> {
+                    RecipeIngredientInfo info = new RecipeIngredientInfo();
+                    info.setIngredientName(ri.getIngredientManagement().getIngredientName());
+                    info.setNecessary(ri.isIngredientIsNecessary());
+                    return info;
+                })
+                .collect(Collectors.toList());
+
+        response.setIngredients(ingredientInfoList);
+
+        return response;
+    }
+
 }

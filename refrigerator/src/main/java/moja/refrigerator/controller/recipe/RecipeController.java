@@ -8,6 +8,7 @@ import moja.refrigerator.dto.recipe.response.RecipeRecommendResponse;
 import moja.refrigerator.dto.recipe.response.RecipeResponse;
 import moja.refrigerator.service.recipe.RecipeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -57,5 +58,15 @@ public class RecipeController {
     @GetMapping("/recommend")
     public List<RecipeRecommendResponse> getRecommendedRecipes(@RequestParam Long userPk) {
         return recipeService.getRecommendedRecipes(userPk);
+    }
+
+    @GetMapping("/random")
+    public ResponseEntity<RecipeRecommendResponse> getRandomRecipe() {
+        try {
+            RecipeRecommendResponse randomRecipe = recipeService.getRandomRecipe();
+            return ResponseEntity.ok(randomRecipe);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

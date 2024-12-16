@@ -2,6 +2,8 @@ package moja.refrigerator.dto.recipe.response;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class RecipeRecommendResponse {
     private long recipePk;
@@ -11,4 +13,5 @@ public class RecipeRecommendResponse {
     private double matchRate;
     private long remainExpirationDays;
     private String urgentIngredientName;
+    private List<RecipeIngredientInfo> ingredients;
 }
