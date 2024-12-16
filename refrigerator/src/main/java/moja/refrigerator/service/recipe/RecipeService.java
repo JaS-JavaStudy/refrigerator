@@ -24,4 +24,5 @@ public interface RecipeService {
             ,List<MultipartFile> files
     );
     List<RecipeRecommendResponse> getRecommendedRecipes(Long userPk);
+    RecipeRecommendResponse getRandomRecipe();
 }

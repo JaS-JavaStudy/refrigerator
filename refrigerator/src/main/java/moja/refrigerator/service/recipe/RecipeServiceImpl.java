@@ -316,4 +316,27 @@ public class RecipeServiceImpl implements RecipeService {
                 isMatched ? urgentIngredientName : null
         );
     }
+    @Override
+    public RecipeRecommendResponse getRandomRecipe() {
+        // 1. 전체 레시피 목록 가져오기
+        List<Recipe> allRecipes = recipeRepository.findAll();
+
+        // 2. 레시피가 없는 경우 예외 처리
+        if (allRecipes.isEmpty()) {
+            throw new IllegalStateException("등록된 레시피가 없습니다.");
+        }
+
+        // 3. 랜덤 인덱스 생성
+        Random random = new Random();
+        int randomIndex = random.nextInt(allRecipes.size());
+
+        // 4. 랜덤하게 선택된 레시피
+        Recipe selectedRecipe = allRecipes.get(randomIndex);
+
+        // 5. Response 객체로 변환
+        RecipeRecommendResponse response = mapper.map(selectedRecipe, RecipeRecommendResponse.class);
+
+        return response;
+    }
+
 }
