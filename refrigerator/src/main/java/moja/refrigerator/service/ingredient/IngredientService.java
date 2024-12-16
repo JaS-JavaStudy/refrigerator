@@ -21,5 +21,5 @@ public interface IngredientService {
 
     ResponseDeleteIngredientBookmark deleteIngredientBookmark(RequestDeleteIngredientBookmark requestDeleteBookmark);
 
-    ResponseAlertExpirationDate alertExpirationDate(RequestAlertExpirationDate requestAlertExpirationDate);
+    List<ResponseAlertExpirationDate> alertExpirationDate(RequestAlertExpirationDate requestAlertExpirationDate);
 }

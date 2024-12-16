@@ -89,10 +89,10 @@ public class IngredientController {
     }
 
     @GetMapping("/alert")
-    public ResponseEntity<ResponseAlertExpirationDate> alertExpirationDate(
+    public ResponseEntity<List<ResponseAlertExpirationDate>> alertExpirationDate(
             @RequestBody RequestAlertExpirationDate requestAlertExpirationDate
     ) {
-        ResponseAlertExpirationDate responseAlertExpirationDate =
+        List<ResponseAlertExpirationDate> responseAlertExpirationDate =
                 ingredientService.alertExpirationDate(requestAlertExpirationDate);
 
         return ResponseEntity.status(HttpStatus.OK).body(responseAlertExpirationDate);
