@@ -1,11 +1,14 @@
 package moja.refrigerator.service.user;
 
+import lombok.RequiredArgsConstructor;
 import moja.refrigerator.aggregate.user.User;
+import moja.refrigerator.dto.user.request.PasswordResetRequest;
+import moja.refrigerator.dto.user.request.PasswordUpdateRequest;
 import moja.refrigerator.dto.user.request.UserCreateRequest;
 import moja.refrigerator.dto.user.request.UserUpdateRequest;
 import moja.refrigerator.exception.user.DuplicateUserException;
-import moja.refrigerator.repository.user.TokenBlacklistRepository;
 import moja.refrigerator.repository.user.UserRepository;
+import moja.refrigerator.service.email.EmailService;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,18 +19,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
-
-    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, ModelMapper modelMapper) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.modelMapper = modelMapper;
-    }
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -72,6 +72,46 @@ public class UserServiceImpl implements UserService {
             }
             user.setUserNickname(request.getUserNickname());
         }
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(PasswordResetRequest request) {
+        // 이메일로 사용자 찾기
+        User user = userRepository.findByUserEmail(request.getUserEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("해당 이메일로 가입된 계정이 없습니다."));
+
+        // 임시 비밀번호 생성
+        String tempPassword = UUID.randomUUID().toString().substring(0, 12);
+
+        try {
+            // 이메일 발송
+            emailService.sendTempPassword(user.getUserNickname(), user.getUserEmail(), tempPassword);
+            // 임시 비밀번호로 업데이트
+            user.setUserPw(passwordEncoder.encode(tempPassword));
+        } catch (Exception e) {
+            System.out.println("Detailed error: " + e.getMessage());
+            throw new RuntimeException("이메일 발송에 실패했습니다.");
+        }
+
+    }
+
+    @Override
+    @Transactional
+    public void updatePassword(PasswordUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
+
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+        // 기존 비밀번호 검증
+        if (!passwordEncoder.matches(request.getCurrentPw(), user.getUserPw())) {
+            throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 새 비밀번호 암호화 후 저장
+        user.setUserPw(passwordEncoder.encode(request.getNewPw()));
     }
 
     private void checkDuplicateUser(UserCreateRequest request) {
