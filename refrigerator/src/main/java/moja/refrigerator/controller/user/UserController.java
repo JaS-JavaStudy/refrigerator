@@ -1,10 +1,10 @@
 package moja.refrigerator.controller.user;
 
-import jakarta.servlet.http.HttpServletRequest;
 import moja.refrigerator.dto.user.request.PasswordResetRequest;
 import moja.refrigerator.dto.user.request.PasswordUpdateRequest;
 import moja.refrigerator.dto.user.request.UserCreateRequest;
 import moja.refrigerator.dto.user.request.UserUpdateRequest;
+import moja.refrigerator.service.user.FollowService;
 import moja.refrigerator.service.user.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class UserController {
     private final UserService userService;
+    private final FollowService followService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, FollowService followService) {
         this.userService = userService;
+        this.followService = followService;
     }
 
     // 토큰 검증 로직 확인용
@@ -50,5 +52,12 @@ public class UserController {
     public ResponseEntity<?> updatePassword(@RequestBody PasswordUpdateRequest request) {
         userService.updatePassword(request);
         return ResponseEntity.ok().body("비밀번호가 변경되었습니다.");
+    }
+
+    // 팔로우 및 언팔로우
+    @PostMapping("/follow/{userPk}")
+    public ResponseEntity<?> toggleFollow(@PathVariable Long userPk) {
+        followService.toggleFollow(userPk);
+        return ResponseEntity.ok().body("팔로우 상태가 변경되었습니다.");
     }
 }
