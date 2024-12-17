@@ -2,6 +2,7 @@ package moja.refrigerator.controller.user;
 
 import jakarta.servlet.http.HttpServletRequest;
 import moja.refrigerator.dto.user.request.PasswordResetRequest;
+import moja.refrigerator.dto.user.request.PasswordUpdateRequest;
 import moja.refrigerator.dto.user.request.UserCreateRequest;
 import moja.refrigerator.dto.user.request.UserUpdateRequest;
 import moja.refrigerator.service.user.UserService;
@@ -42,5 +43,12 @@ public class UserController {
     public ResponseEntity<?> resetPassword(@RequestBody PasswordResetRequest request) {
         userService.resetPassword(request);
         return ResponseEntity.ok().body("임시 비밀번호가 이메일로 발송되었습니다.");
+    }
+
+    // 비밀번호 재설정
+    @PutMapping("/password/update")
+    public ResponseEntity<?> updatePassword(@RequestBody PasswordUpdateRequest request) {
+        userService.updatePassword(request);
+        return ResponseEntity.ok().body("비밀번호가 변경되었습니다.");
     }
 }

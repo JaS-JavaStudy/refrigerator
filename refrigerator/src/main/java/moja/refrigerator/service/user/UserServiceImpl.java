@@ -3,6 +3,7 @@ package moja.refrigerator.service.user;
 import lombok.RequiredArgsConstructor;
 import moja.refrigerator.aggregate.user.User;
 import moja.refrigerator.dto.user.request.PasswordResetRequest;
+import moja.refrigerator.dto.user.request.PasswordUpdateRequest;
 import moja.refrigerator.dto.user.request.UserCreateRequest;
 import moja.refrigerator.dto.user.request.UserUpdateRequest;
 import moja.refrigerator.exception.user.DuplicateUserException;
@@ -93,6 +94,24 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("이메일 발송에 실패했습니다.");
         }
 
+    }
+
+    @Override
+    @Transactional
+    public void updatePassword(PasswordUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
+
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+        // 기존 비밀번호 검증
+        if (!passwordEncoder.matches(request.getCurrentPw(), user.getUserPw())) {
+            throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 새 비밀번호 암호화 후 저장
+        user.setUserPw(passwordEncoder.encode(request.getNewPw()));
     }
 
     private void checkDuplicateUser(UserCreateRequest request) {
