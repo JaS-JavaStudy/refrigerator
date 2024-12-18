@@ -5,6 +5,7 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "tbl_user")
@@ -33,4 +34,10 @@ public class User {
 
     @Column(name = "user_role")
     private String userRole = "ROLE_USER";
+
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.REMOVE)
+    private List<Follow> following;
+
+    @OneToMany(mappedBy = "following", cascade = CascadeType.REMOVE)
+    private List<Follow> followers;
 }

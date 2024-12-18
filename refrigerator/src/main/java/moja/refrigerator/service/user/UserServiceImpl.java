@@ -1,5 +1,7 @@
 package moja.refrigerator.service.user;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import moja.refrigerator.aggregate.user.User;
 import moja.refrigerator.dto.user.request.PasswordResetRequest;
@@ -7,6 +9,7 @@ import moja.refrigerator.dto.user.request.PasswordUpdateRequest;
 import moja.refrigerator.dto.user.request.UserCreateRequest;
 import moja.refrigerator.dto.user.request.UserUpdateRequest;
 import moja.refrigerator.exception.user.DuplicateUserException;
+import moja.refrigerator.jwt.LogoutFilter;
 import moja.refrigerator.repository.user.UserRepository;
 import moja.refrigerator.service.email.EmailService;
 import org.modelmapper.ModelMapper;
@@ -28,6 +31,7 @@ public class UserServiceImpl implements UserService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
     private final EmailService emailService;
+    private final LogoutFilter logoutFilter;
 
     @Override
     @Transactional
@@ -112,6 +116,22 @@ public class UserServiceImpl implements UserService {
 
         // 새 비밀번호 암호화 후 저장
         user.setUserPw(passwordEncoder.encode(request.getNewPw()));
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(HttpServletRequest request, HttpServletResponse response) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
+
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+        // 유저 삭제
+        userRepository.delete(user);
+
+        // 로그아웃 처리 (토큰 블랙리스트에 추가)
+        logoutFilter.logout(request, response, authentication);
     }
 
     private void checkDuplicateUser(UserCreateRequest request) {
