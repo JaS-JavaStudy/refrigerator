@@ -16,6 +16,7 @@ public class IngredientResponse {
     private long ingredientManagementPk;
     private boolean isBookmarked;
     private String ingredientCategory;
+    private long ingredientBookmarkPk;
 
     // ModelMapper 를 위한 기본 생성자 생성
     public IngredientResponse() {}

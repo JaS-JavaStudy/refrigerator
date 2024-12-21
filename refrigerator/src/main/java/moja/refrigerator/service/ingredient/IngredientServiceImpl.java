@@ -83,6 +83,7 @@ public class IngredientServiceImpl implements IngredientService{
                         if (ingredientBookmark.getIngredientMyRefrigerator().getIngredientMyRefrigeratorPk()
                         == ingredient.getIngredientMyRefrigeratorPk()) {
                             isBookmark = true;
+                            response.setIngredientBookmarkPk(ingredientBookmark.getIngredientBookmarkPk());
                             break;
                         }
                     }
