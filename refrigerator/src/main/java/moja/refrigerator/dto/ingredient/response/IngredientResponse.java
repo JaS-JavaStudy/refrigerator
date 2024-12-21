@@ -13,6 +13,9 @@ public class IngredientResponse {
     private long remainExpirationDate;
     private int seasonDate;
     private String ingredientStorage;
+    private long ingredientManagementPk;
+    private boolean isBookmarked;
+    private String ingredientCategory;
 
     // ModelMapper 를 위한 기본 생성자 생성
     public IngredientResponse() {}
