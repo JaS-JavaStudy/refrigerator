@@ -1,6 +1,7 @@
 package moja.refrigerator.aggregate.recipe;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -25,8 +26,8 @@ public class RecipeStep {
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
-    @JoinColumn(name = "recipe_Source_pk")
-    private RecipeSource recipeSources;
+    @JoinColumn(name = "recipe_step_source_pk")
+    private RecipeStepSource recipeStepSource;
 
     @ManyToOne
     @JoinColumn(name = "recipe_pk")

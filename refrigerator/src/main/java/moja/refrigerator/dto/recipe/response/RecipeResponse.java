@@ -23,7 +23,8 @@ public class RecipeResponse {
     private LocalDateTime recipeUpdateTime;
 
     private List<RecipeSource> recipeSource;
-    private List<RecipeStep> recipeStep;
+
+    private List<RecipeStepResponse> recipeStep;
     private User user;
     private RecipeCategory recipeCategory;
 
