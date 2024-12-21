@@ -27,13 +27,13 @@ public class RecipeController {
     }
 
     @PostMapping
-    public void createRecipe(
+    public Recipe createRecipe(
             @RequestPart RecipeCreateRequest request
             ,@RequestPart (name="recipeSources",required =false) List<MultipartFile> recipeSources
             ,@RequestPart (name="recipeStepSources",required =false) List<MultipartFile> recipeStepSources
     ){
 
-        recipeService.createRecipe(request
+        return recipeService.createRecipe(request
                 , recipeSources
                 , recipeStepSources
         );
@@ -53,12 +53,12 @@ public class RecipeController {
     }
 
     @PutMapping
-    public void updateRecipe(
+    public Recipe updateRecipe(
             @RequestPart RecipeUpdateRequest request
             ,@RequestPart (name="recipeSources",required =false) List<MultipartFile> recipeSources
             ,@RequestPart (name="recipeStepSources",required =false) List<MultipartFile> recipeStepSources
     ){
-        recipeService.updateRecipe(request,recipeSources,recipeStepSources);
+        return recipeService.updateRecipe(request,recipeSources,recipeStepSources);
     }
 
     @GetMapping("/recommend")

@@ -26,6 +26,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of the RecipeService interface, providing business logic for managing recipes.
+ * This class interacts with various repositories for CRUD operations related to recipes, ingredients, files, and user data,
+ * as well as Amazon S3 for file storage.
+ */
 @Service
 public class RecipeServiceImpl implements RecipeService {
 
@@ -41,6 +46,7 @@ public class RecipeServiceImpl implements RecipeService {
     private final ReplacableIngredientRepository replacableIngredientRepository;
     private final RecipeLikeDislikeRepository recipeLikeDislikeRepository;
     private final RecipeStepRepository recipeStepRepository;
+    private final RecipeStepSourceRepository recipeStepSourceRepository;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -58,7 +64,8 @@ public class RecipeServiceImpl implements RecipeService {
             RecipeIngredientRepository recipeIngredientRepository,
             ReplacableIngredientRepository replacableIngredientRepository,
             RecipeLikeDislikeRepository recipeLikeDislikeRepository,
-            RecipeStepRepository recipeStepRepository
+            RecipeStepRepository recipeStepRepository,
+            RecipeStepSourceRepository recipeStepSourceRepository
     ) {
         this.recipeRepository = recipeRepository;
         this.userRepository = userRepository;
@@ -72,6 +79,7 @@ public class RecipeServiceImpl implements RecipeService {
         this.replacableIngredientRepository = replacableIngredientRepository;
         this.recipeLikeDislikeRepository = recipeLikeDislikeRepository;
         this.recipeStepRepository = recipeStepRepository;
+        this.recipeStepSourceRepository = recipeStepSourceRepository;
     }
     private boolean isImageFile(String fileName) {
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
@@ -83,7 +91,7 @@ public class RecipeServiceImpl implements RecipeService {
         return List.of("mp4", "avi", "mov", "wmv").contains(extension);
     }
     // 파일 처리 전용 메서드
-    private RecipeSource processAndSaveFile(MultipartFile file, Recipe recipe, String pathPrefix) {
+    private RecipeSource RecipeSourceSaveFile(MultipartFile file, Recipe recipe, String pathPrefix) {
         try {
             if (file == null || file.isEmpty()) {
                 return null;
@@ -118,6 +126,7 @@ public class RecipeServiceImpl implements RecipeService {
             recipeSource.setRecipeSourceType(recipeSourceType);
             recipeSource.setRecipe(recipe);
 
+
             // AWS S3에 파일 업로드
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(file.getContentType());
@@ -132,11 +141,60 @@ public class RecipeServiceImpl implements RecipeService {
         }
     }
 
+    private RecipeStepSource RecipeStepSourceSaveFile(MultipartFile file, RecipeStep recipeStep, String pathPrefix) {
+        try {
+            if (file == null || file.isEmpty()) {
+                return null;
+            }
+            String originalFileName = file.getOriginalFilename();
+            if (originalFileName == null) {
+                throw new IllegalArgumentException("Empty file name is not allowed");
+            }
+
+            // 파일 이름 생성 및 저장 경로 설정
+            UUID uuid = UUID.randomUUID();
+            String serverFileName = uuid + "_" + originalFileName;
+            String fileUrl = "https://" + bucket + "/" + pathPrefix + serverFileName;
+
+            // RecipeSource 생성 및 설정
+            RecipeStepSource recipeSource = new RecipeStepSource();
+            recipeSource.setRecipeStepSourceServername(serverFileName);
+            recipeSource.setRecipeStepSourceSave(fileUrl);
+            recipeSource.setRecipeStepSourceFileName(originalFileName);
+
+            // 파일 타입 처리
+            RecipeSourceType recipeSourceType;
+            if (isImageFile(originalFileName)) {
+                recipeSourceType = recipeSourceTypeRepository.findById(1)
+                        .orElseThrow(() -> new IllegalArgumentException("Image type not found"));
+            } else if (isVideoFile(originalFileName)) {
+                recipeSourceType = recipeSourceTypeRepository.findById(2)
+                        .orElseThrow(() -> new IllegalArgumentException("Video type not found"));
+            } else {
+                throw new IllegalArgumentException("Unsupported file type: " + originalFileName);
+            }
+            recipeSource.setRecipeStepSourceType(recipeSourceType);
+            recipeSource.setRecipeStep(recipeStep);
+
+            // AWS S3에 파일 업로드
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType(file.getContentType());
+            metadata.setContentLength(file.getSize());
+            amazonS3Client.putObject(bucket, pathPrefix + serverFileName, file.getInputStream(), metadata);
+
+            // RecipeSource 저장
+            recipeStepSourceRepository.save(recipeSource);
+            return recipeSource;
+
+        } catch (IOException e) {
+            throw new RuntimeException("File upload failed: " + e.getMessage(), e);
+        }
+    }
 
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void createRecipe(RecipeCreateRequest request
+    public Recipe createRecipe(RecipeCreateRequest request
             ,List<MultipartFile> recipeSources
             ,List<MultipartFile> recipeStepSources
     ) {
@@ -156,7 +214,8 @@ public class RecipeServiceImpl implements RecipeService {
 
         if(recipeSources != null && !recipeSources.isEmpty()) {
             for(MultipartFile file : recipeSources) {
-                processAndSaveFile(file, recipe, "recipe/");
+                RecipeSource recipeSource = RecipeSourceSaveFile(file, recipe, "recipe/");
+                recipe.getRecipeSource().add(recipeSource);
             }
         }
 
@@ -175,16 +234,16 @@ public class RecipeServiceImpl implements RecipeService {
                 if (recipeStepSources != null && recipeStepSources.size() > i) {
                     System.out.println("------------------------------");
                     MultipartFile file = recipeStepSources.get(i);
-                    RecipeSource stepSource = processAndSaveFile(file, recipe, "recipe/step/");
-                    newStep.setRecipeSources(stepSource); // 파일 매핑
+                    RecipeStepSource stepSource = RecipeStepSourceSaveFile(file, newStep, "recipe/step/");
+                    newStep.setRecipeStepSource(stepSource); // 파일 매핑
                 }
 
                 recipe.getRecipeStep().add(newStep);
             }
         }
 
-
         recipeRepository.save(recipe);
+        return recipe;
     }
 
     @Override
@@ -213,8 +272,11 @@ public class RecipeServiceImpl implements RecipeService {
         }
         List<RecipeStep> steps = recipe.getRecipeStep();
         if(steps != null && !steps.isEmpty()) {
-            for (RecipeSource recipeSource : sources) {
-                amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, "recipe/step/"+recipeSource.getRecipeSourceServername()));
+            for (RecipeStep recipeStep : steps) {
+                RecipeStepSource stepSource = recipeStep.getRecipeStepSource();
+                if(stepSource != null) {
+                    amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, "recipe/step/"+stepSource.getRecipeStepSourceServername()));
+                }
             }
         }
         recipeRepository.delete(recipe);
@@ -224,7 +286,7 @@ public class RecipeServiceImpl implements RecipeService {
 
     @Override
     @Transactional
-    public void updateRecipe(RecipeUpdateRequest request
+    public Recipe updateRecipe(RecipeUpdateRequest request
             ,List<MultipartFile> recipeSources
             ,List<MultipartFile> recipeStepSources
     ) {
@@ -300,8 +362,12 @@ public class RecipeServiceImpl implements RecipeService {
         //시간 문제로 레시피 step 전부 삭제 후 생성하는거로 대처
         List<RecipeStep> steps = recipe.getRecipeStep();
         if(steps != null && !steps.isEmpty()) {
-            for (RecipeSource recipeSource : sources) {
-                amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, "recipe/step/"+recipeSource.getRecipeSourceServername()));
+            for (RecipeStep step : steps) {
+                RecipeStepSource stepSource = step.getRecipeStepSource();
+                if(stepSource != null) {
+                    amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, "recipe/step/"+stepSource.getRecipeStepSourceServername()));
+
+                }
             }
             //기존 사진 소스 다 삭제 후
             recipe.getRecipeStep().clear();
@@ -320,19 +386,19 @@ public class RecipeServiceImpl implements RecipeService {
                 newStep.setRecipe(recipe);
 
                 if (recipeStepSources != null && recipeStepSources.size() > i) {
-                    System.out.println("------------------------------");
+                    System.out.println("------------------------------22");
                     MultipartFile file = recipeStepSources.get(i);
-                    RecipeSource stepSource = processAndSaveFile(file, recipe, "recipe/step/");
-                    newStep.setRecipeSources(stepSource); // 파일 매핑
+                    RecipeStepSource stepSource = RecipeStepSourceSaveFile(file, newStep, "recipe/step/");
+                    newStep.setRecipeStepSource(stepSource); // 파일 매핑
                 }
 
                 recipe.getRecipeStep().add(newStep);
             }
         }
 
-
-
         recipeRepository.save(recipe);
+
+        return recipe;
     }
 
 

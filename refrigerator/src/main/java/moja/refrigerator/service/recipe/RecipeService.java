@@ -15,14 +15,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface RecipeService {
-    void createRecipe(RecipeCreateRequest request
+    Recipe createRecipe(RecipeCreateRequest request
             ,List<MultipartFile> recipeSources
             ,List<MultipartFile> recipeStepSources
     );
     List<RecipeResponse> getAllRecipes();
     RecipeDetailResponse getRecipe(long id);
     void deleteRecipe(long recipePk);
-    void updateRecipe(
+    Recipe updateRecipe(
             RecipeUpdateRequest request
             ,List<MultipartFile> recipeSources
             ,List<MultipartFile> recipeStepSources
