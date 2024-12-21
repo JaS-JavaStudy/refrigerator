@@ -16,14 +16,16 @@ import java.util.List;
 
 public interface RecipeService {
     void createRecipe(RecipeCreateRequest request
-            ,List<MultipartFile> files
+            ,List<MultipartFile> recipeSources
+            ,List<MultipartFile> recipeStepSources
     );
     List<RecipeResponse> getAllRecipes();
     RecipeDetailResponse getRecipe(long id);
     void deleteRecipe(long recipePk);
     void updateRecipe(
             RecipeUpdateRequest request
-            ,List<MultipartFile> files
+            ,List<MultipartFile> recipeSources
+            ,List<MultipartFile> recipeStepSources
     );
     List<RecipeRecommendResponse> getRecommendedRecipes(Long userPk);
     RecipeRecommendResponse getRandomRecipe();
