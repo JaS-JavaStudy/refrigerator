@@ -14,4 +14,7 @@ public class RecipeRecommendResponse {
     private long remainExpirationDays;
     private String urgentIngredientName;
     private List<RecipeIngredientInfo> ingredients;
+
+    private List<RecipeSourceInfo> mainImages;     // 메인 이미지들
+    private List<RecipeStepWithImage> steps;
 }

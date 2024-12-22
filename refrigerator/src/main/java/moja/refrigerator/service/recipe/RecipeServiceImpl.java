@@ -416,10 +416,50 @@ public class RecipeServiceImpl implements RecipeService {
                     response.setMatchRate(result.getMatchRate());
                     response.setRemainExpirationDays(result.getRemainExpirationDays());
                     response.setUrgentIngredientName(result.getUrgentIngredientName());
+
+                    Recipe recipe = result.getRecipe();
+
+                    // 메인 레시피 이미지 설정
+                    List<RecipeSourceInfo> mainImages = recipe.getRecipeSource().stream()
+                            .filter(source -> source.getRecipeSourceType().getRecipeSourceType().equals("MAIN"))
+                            .map(this::convertToRecipeSourceInfo)
+                            .collect(Collectors.toList());
+                    response.setMainImages(mainImages);
+
+                    // 스텝별 정보와 이미지 설정
+                    List<RecipeStepWithImage> steps = recipe.getRecipeStep().stream()
+                            .map(step -> {
+                                RecipeStepWithImage stepInfo = new RecipeStepWithImage();
+                                stepInfo.setOrder(step.getRecipeStepOrder());
+                                stepInfo.setContent(step.getRecipeStepContent());
+
+                                // 스텝 이미지 처리
+                                if (step.getRecipeStepSource() != null) {
+                                    RecipeSourceInfo stepImage = new RecipeSourceInfo();
+                                    stepImage.setFilePath(step.getRecipeStepSource().getRecipeStepSourceSave() + "/" +
+                                            step.getRecipeStepSource().getRecipeStepSourceServername());
+                                    stepImage.setOriginalName(step.getRecipeStepSource().getRecipeStepSourceFileName());
+                                    stepInfo.setImages(Collections.singletonList(stepImage));
+                                } else {
+                                    stepInfo.setImages(Collections.emptyList());
+                                }
+
+                                return stepInfo;
+                            })
+                            .collect(Collectors.toList());
+                    response.setSteps(steps);
+
                     return response;
                 })
                 .sorted(Comparator.comparingLong(RecipeRecommendResponse::getRemainExpirationDays))
                 .collect(Collectors.toList());
+    }
+
+    private RecipeSourceInfo convertToRecipeSourceInfo(RecipeSource source) {
+        RecipeSourceInfo info = new RecipeSourceInfo();
+        info.setFilePath(source.getRecipeSourceSave() + "/" + source.getRecipeSourceServername());
+        info.setOriginalName(source.getRecipeSourceFileName());
+        return info;
     }
 
     private RecipeMatchResult checkRecipeMatch(Recipe recipe, List<IngredientMyRefrigerator> userIngredients) {
