@@ -216,14 +216,6 @@ public class RecipeServiceImpl implements RecipeService {
 
         RecipeCategory recipeCategory = recipeCategoryRepository.findById(request.getRecipeCategoryPk())
                 .orElseThrow(IllegalArgumentException::new);
-        recipe.setRecipeCategory(recipeCategory);
-
-        if(recipeSources != null && !recipeSources.isEmpty()) {
-            for(MultipartFile file : recipeSources) {
-                RecipeSource recipeSource = RecipeSourceSaveFile(file, recipe, "recipe/");
-                recipe.getRecipeSource().add(recipeSource);
-            }
-        }
 
 
         List<RecipeIngredientCreateRequest> recipeIngredient = request.getRecipeIngredients();
@@ -234,15 +226,25 @@ public class RecipeServiceImpl implements RecipeService {
                 IngredientManagement ingredientManage =  ingredientManagementRepository.findByIngredientName(ingredient.getIngredientName())
                         .orElseThrow(IllegalArgumentException::new);
 
+                System.out.println(ingredient.getIngredientName());
 
                 RecipeIngredient newIngredient = new RecipeIngredient();
                 newIngredient.setRecipe(recipe);
                 newIngredient.setIngredientManagement(ingredientManage);
                 newIngredient.setIngredientIsNecessary(ingredient.isIngredientIsNecessary());
 
+
                 recipe.getRecipeIngredients().add(newIngredient);
             }
         }
+
+        if(recipeSources != null && !recipeSources.isEmpty()) {
+            for(MultipartFile file : recipeSources) {
+                RecipeSource recipeSource = RecipeSourceSaveFile(file, recipe, "recipe/");
+                recipe.getRecipeSource().add(recipeSource);
+            }
+        }
+
 
         List<RecipeStepRequest> recipeSteps = request.getRecipeSteps();
         if(recipeSteps != null ) {
@@ -256,7 +258,6 @@ public class RecipeServiceImpl implements RecipeService {
                 newStep.setRecipe(recipe);
 
                 if (recipeStepSources != null && recipeStepSources.size() > i) {
-                    System.out.println("------------------------------");
                     MultipartFile file = recipeStepSources.get(i);
                     RecipeStepSource stepSource = RecipeStepSourceSaveFile(file, newStep, "recipe/step/");
                     newStep.setRecipeStepSource(stepSource); // 파일 매핑
@@ -265,7 +266,6 @@ public class RecipeServiceImpl implements RecipeService {
                 recipe.getRecipeStep().add(newStep);
             }
         }
-
         recipeRepository.save(recipe);
         return recipe;
     }
@@ -342,6 +342,7 @@ public class RecipeServiceImpl implements RecipeService {
                 .toList();
 
         recipe.getRecipeIngredients().clear();
+
         List<RecipeIngredientUpdateRequest> recipeIngredient = request.getRecipeIngredients();
         if(recipeIngredient != null && !recipeIngredient.isEmpty()) {
             for (int i = 0; i < recipeIngredient.size(); i++) {
