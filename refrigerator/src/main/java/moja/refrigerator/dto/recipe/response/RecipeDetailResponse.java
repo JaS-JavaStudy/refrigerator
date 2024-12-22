@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.Data;
+import moja.refrigerator.aggregate.recipe.RecipeSource;
 import moja.refrigerator.dto.ingredient.response.IngredientResponse;
 
 @Data
@@ -17,9 +18,10 @@ public class RecipeDetailResponse {
     private LocalDateTime recipeCreateTime;;
     private LocalDateTime recipeUpdateTime;
 
-    private String recipeSource;
+    private List<RecipeSource> recipeSource;
     private String userPk;
     private String recipeCategory;
 
     private List<IngredientResponse> ingredients;
+    private List<RecipeStepResponse> recipeStep;
 }
