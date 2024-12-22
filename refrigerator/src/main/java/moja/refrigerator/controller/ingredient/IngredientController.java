@@ -94,7 +94,7 @@ public class IngredientController {
         return ResponseEntity.status(HttpStatus.OK).body(responseDeleteIngredientBookmark);
     }
 
-    @GetMapping("/alert")
+    @PostMapping("/alert")
     public ResponseEntity<List<ResponseAlertExpirationDate>> alertExpirationDate(
             @RequestBody RequestAlertExpirationDate requestAlertExpirationDate
     ) {
