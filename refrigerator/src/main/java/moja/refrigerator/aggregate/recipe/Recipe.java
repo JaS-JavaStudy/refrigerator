@@ -56,6 +56,10 @@ public class Recipe {
     @JsonManagedReference
     private List<RecipeSource> recipeSource = new ArrayList<>() ; // 여러 Source가 들어갈 수 있으니까 list로 수정
 
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<RecipeStep> recipeStep = new ArrayList<>();
+
 
     @JoinColumn(name = "recipe_category")
     @ManyToOne

@@ -3,6 +3,7 @@ package moja.refrigerator.dto.recipe.response;
 import lombok.Data;
 import moja.refrigerator.aggregate.recipe.RecipeCategory;
 import moja.refrigerator.aggregate.recipe.RecipeSource;
+import moja.refrigerator.aggregate.recipe.RecipeStep;
 import moja.refrigerator.aggregate.user.User;
 
 import java.time.LocalDateTime;
@@ -22,6 +23,8 @@ public class RecipeResponse {
     private LocalDateTime recipeUpdateTime;
 
     private List<RecipeSource> recipeSource;
+
+    private List<RecipeStepResponse> recipeStep;
     private User user;
     private RecipeCategory recipeCategory;
 

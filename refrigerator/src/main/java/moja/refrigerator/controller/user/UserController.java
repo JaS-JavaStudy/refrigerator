@@ -1,5 +1,7 @@
 package moja.refrigerator.controller.user;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import moja.refrigerator.dto.user.request.PasswordResetRequest;
 import moja.refrigerator.dto.user.request.PasswordUpdateRequest;
 import moja.refrigerator.dto.user.request.UserCreateRequest;
@@ -59,5 +61,12 @@ public class UserController {
     public ResponseEntity<?> toggleFollow(@PathVariable Long userPk) {
         followService.toggleFollow(userPk);
         return ResponseEntity.ok().body("팔로우 상태가 변경되었습니다.");
+    }
+
+    // 회원 탈퇴
+    @PostMapping("/delete")
+    public ResponseEntity<?> delete(HttpServletRequest request, HttpServletResponse response) {
+        userService.deleteUser(request, response);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

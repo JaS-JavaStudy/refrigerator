@@ -65,6 +65,7 @@ public class IngredientServiceImpl implements IngredientService{
     @Transactional(readOnly = true)
     public List<IngredientResponse> getIngredient(Long userPk) {
         List<IngredientMyRefrigerator> ingredients = ingredientMyRefrigeratorRepository.findByUserUserPk(userPk);
+        List<IngredientBookmark> ingredientBookmarks = ingredientBookmarkRepository.findAllByUser_UserPk(userPk);
 
         LocalDate currentDate = LocalDate.now();
         AtomicInteger counter = new AtomicInteger(1);
@@ -76,6 +77,17 @@ public class IngredientServiceImpl implements IngredientService{
                     response.setIngredientName(ingredient.getIngredientManagement().getIngredientName());
                     response.setSeasonDate(ingredient.getIngredientManagement().getSeasonDate());
                     response.setIngredientStorage(ingredient.getIngredientManagement().getIngredientStorage().getIngredientStorage());
+                    response.setIngredientCategory(ingredient.getIngredientManagement().getIngredientCategory().getIngredientCategory());
+                    boolean isBookmark = false;
+                    for (IngredientBookmark ingredientBookmark : ingredientBookmarks) {
+                        if (ingredientBookmark.getIngredientMyRefrigerator().getIngredientMyRefrigeratorPk()
+                        == ingredient.getIngredientMyRefrigeratorPk()) {
+                            isBookmark = true;
+                            response.setIngredientBookmarkPk(ingredientBookmark.getIngredientBookmarkPk());
+                            break;
+                        }
+                    }
+                    response.setBookmarked(isBookmark);
 
                     // 현재 날짜 기준, 유통기한 남은 일수 계산
                     LocalDate expirationDate = LocalDate.parse(ingredient.getExpirationDate());
