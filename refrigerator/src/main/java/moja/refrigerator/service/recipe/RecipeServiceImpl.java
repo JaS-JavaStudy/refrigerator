@@ -50,6 +50,8 @@ public class RecipeServiceImpl implements RecipeService {
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
+    @Value("${cloud.aws.region.static}")
+    private String region;
 
     @Autowired
     public RecipeServiceImpl(
@@ -104,7 +106,7 @@ public class RecipeServiceImpl implements RecipeService {
             // 파일 이름 생성 및 저장 경로 설정
             UUID uuid = UUID.randomUUID();
             String serverFileName = uuid + "_" + originalFileName;
-            String fileUrl = "https://" + bucket + "/" + pathPrefix + serverFileName;
+            String fileUrl = "https://" + bucket + ".s3."+region+".amazonaws.com/" + pathPrefix + serverFileName;
 
             // RecipeSource 생성 및 설정
             RecipeSource recipeSource = new RecipeSource();
@@ -154,7 +156,7 @@ public class RecipeServiceImpl implements RecipeService {
             // 파일 이름 생성 및 저장 경로 설정
             UUID uuid = UUID.randomUUID();
             String serverFileName = uuid + "_" + originalFileName;
-            String fileUrl = "https://" + bucket + "/" + pathPrefix + serverFileName;
+            String fileUrl = "https://" + bucket +".s3."+region+".amazonaws.com/"+  pathPrefix + serverFileName;
 
             // RecipeSource 생성 및 설정
             RecipeStepSource recipeSource = new RecipeStepSource();
