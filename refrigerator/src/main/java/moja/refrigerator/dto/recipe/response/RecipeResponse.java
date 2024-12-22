@@ -27,5 +27,6 @@ public class RecipeResponse {
     private List<RecipeStepResponse> recipeStep;
     private User user;
     private RecipeCategory recipeCategory;
+    private List<RecipeIngredientResponse> recipeIngredients;
 
 }

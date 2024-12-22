@@ -65,6 +65,7 @@ public class Recipe {
     @ManyToOne
     private RecipeCategory recipeCategory;
 
-    @OneToMany(mappedBy = "recipe")
-    private List<RecipeIngredient> recipeIngredients;
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<RecipeIngredient> recipeIngredients = new ArrayList<>();
 }
