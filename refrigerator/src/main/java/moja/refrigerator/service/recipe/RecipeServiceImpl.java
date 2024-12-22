@@ -385,7 +385,17 @@ public class RecipeServiceImpl implements RecipeService {
         //시간 문제로 레시피 step 전부 삭제 후 생성하는거로 대처
         List<RecipeStep> steps = recipe.getRecipeStep();
 
-
+            // 지우는 작업은 늦게함.
+        if(steps != null && !steps.isEmpty()) {
+            for (RecipeStep step : steps) {
+                RecipeStepSource stepSource = step.getRecipeStepSource();
+                if(stepSource != null) {
+                    amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, "recipe/step/"+stepSource.getRecipeStepSourceServername()));
+                }
+            }
+            //기존 사진 소스 다 삭제 후
+            recipe.getRecipeStep().clear();
+        }
 
         List<RecipeStepUpdateRequest> recipeSteps = request.getRecipeSteps();
         if(recipeSteps != null ) {
@@ -410,17 +420,7 @@ public class RecipeServiceImpl implements RecipeService {
             }
         }
 
-        // 지우는 작업은 늦게함.
-        if(steps != null && !steps.isEmpty()) {
-            for (RecipeStep step : steps) {
-                RecipeStepSource stepSource = step.getRecipeStepSource();
-                if(stepSource != null) {
-                    amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, "recipe/step/"+stepSource.getRecipeStepSourceServername()));
-                }
-            }
-            //기존 사진 소스 다 삭제 후
-            recipe.getRecipeStep().clear();
-        }
+
 
         recipeRepository.save(recipe);
 
