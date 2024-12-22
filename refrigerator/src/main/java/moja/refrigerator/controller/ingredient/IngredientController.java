@@ -22,6 +22,18 @@ public class IngredientController {
         this.ingredientService = ingredientService;
     }
 
+    // 전체 재료 조회 API 추가 (userPk 파라미터를 선택적으로 만듦)
+    @GetMapping
+    public List<IngredientResponse> getIngredient(@RequestParam(required = false) Long userPk) {
+        if (userPk != null) {
+            // 기존 로직: 특정 사용자의 냉장고 재료 조회
+            return ingredientService.getIngredient(userPk);
+        } else {
+            // 새로운 로직: 전체 재료 목록 조회
+            return ingredientService.getAllIngredients();
+        }
+    }
+
     // 재료 등록
     @PostMapping
     public void createIngredient(
@@ -29,12 +41,6 @@ public class IngredientController {
             @RequestParam Long userPk,
             @RequestParam Long ingredientManagementPk) {
         ingredientService.createIngredient(request, userPk, ingredientManagementPk);
-    }
-
-    // 재료 조회
-    @GetMapping
-    public List<IngredientResponse> getIngredient(@RequestParam Long userPk) {
-        return ingredientService.getIngredient(userPk);
     }
 
     // 재료 정보 수정
@@ -88,7 +94,7 @@ public class IngredientController {
         return ResponseEntity.status(HttpStatus.OK).body(responseDeleteIngredientBookmark);
     }
 
-    @GetMapping("/alert")
+    @PostMapping("/alert")
     public ResponseEntity<List<ResponseAlertExpirationDate>> alertExpirationDate(
             @RequestBody RequestAlertExpirationDate requestAlertExpirationDate
     ) {
