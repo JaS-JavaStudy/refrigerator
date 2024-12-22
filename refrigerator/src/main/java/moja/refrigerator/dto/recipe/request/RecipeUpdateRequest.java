@@ -16,5 +16,6 @@ public class RecipeUpdateRequest {
     private String recipeCategory;
     private String userPk;
     private List<RecipeStepUpdateRequest> recipeSteps;
+    private List<RecipeIngredientUpdateRequest> recipeIngredients;
 
 }
