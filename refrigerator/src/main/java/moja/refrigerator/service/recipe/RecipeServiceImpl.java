@@ -386,7 +386,6 @@ public class RecipeServiceImpl implements RecipeService {
         //시간 문제로 레시피 step 전부 삭제 후 생성하는거로 대처
         List<RecipeStep> steps = recipe.getRecipeStep();
 
-
         List<RecipeStepUpdateRequest> recipeSteps = request.getRecipeSteps();
         if (recipeSteps != null) {
             for (int i = 0; i < recipeSteps.size(); i++) {
@@ -409,7 +408,6 @@ public class RecipeServiceImpl implements RecipeService {
                 recipe.getRecipeStep().add(newStep);
             }
         }
-
         // 지우는 작업은 늦게함.
         if (steps != null && !steps.isEmpty()) {
             for (RecipeStep step : steps) {
