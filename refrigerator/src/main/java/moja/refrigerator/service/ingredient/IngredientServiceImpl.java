@@ -114,6 +114,12 @@ public class IngredientServiceImpl implements IngredientService{
     @Override
     @Transactional
     public void deleteIngredient(IngredientDeleteRequest request) {
+        // 북마크가 있다면 먼저 삭제
+        ingredientBookmarkRepository.deleteByIngredientMyRefrigerator_IngredientMyRefrigeratorPk(
+                request.getIngredientMyRefrigeratorPk()
+        );
+
+        // 그 다음 재료 삭제 로직 실행
         IngredientMyRefrigerator ingredient = ingredientMyRefrigeratorRepository
                 .findById(request.getIngredientMyRefrigeratorPk())
                 .orElseThrow(() -> new IllegalArgumentException("삭제할 재료를 찾을 수 없습니다."));
@@ -124,14 +130,31 @@ public class IngredientServiceImpl implements IngredientService{
         if (currentAmount < deleteAmount) {
             throw new IllegalArgumentException("삭제할 수량이 현재 보유 수량보다 많습니다.");
         }
-        // 삭제할 수량이 딱 맞아 떨어지면 재료를 완전 삭제
+
         if (currentAmount == deleteAmount) {
             ingredientMyRefrigeratorRepository.deleteById(request.getIngredientMyRefrigeratorPk());
         } else {
-            // 현재 수량 - 삭제할 수량의 계산 결과를 저장
             ingredient.setIngredientAmount(currentAmount - deleteAmount);
             ingredientMyRefrigeratorRepository.save(ingredient);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<IngredientResponse> getAllIngredients() {
+        List<IngredientManagement> ingredients = ingredientManagementRepository.findAll();
+
+        return ingredients.stream()
+                .map(ingredient -> {
+                    IngredientResponse response = new IngredientResponse();
+                    response.setIngredientManagementPk(ingredient.getIngredientManagementPk());
+                    response.setIngredientName(ingredient.getIngredientName());
+                    response.setIngredientCategory(ingredient.getIngredientCategory().getIngredientCategory());
+                    response.setIngredientStorage(ingredient.getIngredientStorage().getIngredientStorage());
+                    response.setSeasonDate(ingredient.getSeasonDate());
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override

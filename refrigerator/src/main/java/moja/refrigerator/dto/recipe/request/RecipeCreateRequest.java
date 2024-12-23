@@ -1,6 +1,7 @@
 package moja.refrigerator.dto.recipe.request;
 
 import lombok.Data;
+import moja.refrigerator.aggregate.recipe.RecipeIngredient;
 import moja.refrigerator.aggregate.recipe.RecipeStep;
 
 import java.util.List;
@@ -14,5 +15,6 @@ public class RecipeCreateRequest {
     private int recipeCategoryPk;
     private List<RecipeStepRequest> recipeSteps;
     private long userPk;
+    private List<RecipeIngredientCreateRequest> recipeIngredients;
 
 }

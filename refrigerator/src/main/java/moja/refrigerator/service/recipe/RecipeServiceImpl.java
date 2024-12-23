@@ -3,12 +3,14 @@ package moja.refrigerator.service.recipe;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import moja.refrigerator.aggregate.ingredient.IngredientManagement;
 import moja.refrigerator.aggregate.ingredient.IngredientMyRefrigerator;
 import moja.refrigerator.aggregate.recipe.*;
 import moja.refrigerator.aggregate.user.User;
 import moja.refrigerator.dto.recipe.RecipeMatchResult;
 import moja.refrigerator.dto.recipe.request.*;
 import moja.refrigerator.dto.recipe.response.*;
+import moja.refrigerator.repository.ingredient.IngredientManagementRepository;
 import moja.refrigerator.repository.ingredient.IngredientMyRefrigeratorRepository;
 import moja.refrigerator.repository.recipe.*;
 import moja.refrigerator.repository.user.UserRepository;
@@ -47,9 +49,12 @@ public class RecipeServiceImpl implements RecipeService {
     private final RecipeLikeDislikeRepository recipeLikeDislikeRepository;
     private final RecipeStepRepository recipeStepRepository;
     private final RecipeStepSourceRepository recipeStepSourceRepository;
+    private final IngredientManagementRepository ingredientManagementRepository;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
+    @Value("${cloud.aws.region.static}")
+    private String region;
 
     @Autowired
     public RecipeServiceImpl(
@@ -65,8 +70,8 @@ public class RecipeServiceImpl implements RecipeService {
             ReplacableIngredientRepository replacableIngredientRepository,
             RecipeLikeDislikeRepository recipeLikeDislikeRepository,
             RecipeStepRepository recipeStepRepository,
-            RecipeStepSourceRepository recipeStepSourceRepository
-    ) {
+            RecipeStepSourceRepository recipeStepSourceRepository,
+            IngredientManagementRepository ingredientManagementRepository) {
         this.recipeRepository = recipeRepository;
         this.userRepository = userRepository;
         this.recipeSourceRepository = recipeSourceRepository;
@@ -80,6 +85,7 @@ public class RecipeServiceImpl implements RecipeService {
         this.recipeLikeDislikeRepository = recipeLikeDislikeRepository;
         this.recipeStepRepository = recipeStepRepository;
         this.recipeStepSourceRepository = recipeStepSourceRepository;
+        this.ingredientManagementRepository = ingredientManagementRepository;
     }
     private boolean isImageFile(String fileName) {
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
@@ -104,7 +110,7 @@ public class RecipeServiceImpl implements RecipeService {
             // 파일 이름 생성 및 저장 경로 설정
             UUID uuid = UUID.randomUUID();
             String serverFileName = uuid + "_" + originalFileName;
-            String fileUrl = "https://" + bucket + "/" + pathPrefix + serverFileName;
+            String fileUrl = "https://" + bucket + ".s3."+region+".amazonaws.com/" + pathPrefix + serverFileName;
 
             // RecipeSource 생성 및 설정
             RecipeSource recipeSource = new RecipeSource();
@@ -154,7 +160,7 @@ public class RecipeServiceImpl implements RecipeService {
             // 파일 이름 생성 및 저장 경로 설정
             UUID uuid = UUID.randomUUID();
             String serverFileName = uuid + "_" + originalFileName;
-            String fileUrl = "https://" + bucket + "/" + pathPrefix + serverFileName;
+            String fileUrl = "https://" + bucket +".s3."+region+".amazonaws.com/"+  pathPrefix + serverFileName;
 
             // RecipeSource 생성 및 설정
             RecipeStepSource recipeSource = new RecipeStepSource();
@@ -164,6 +170,7 @@ public class RecipeServiceImpl implements RecipeService {
 
             // 파일 타입 처리
             RecipeSourceType recipeSourceType;
+            System.out.println(originalFileName+"-----------------------------------------------------------------");
             if (isImageFile(originalFileName)) {
                 recipeSourceType = recipeSourceTypeRepository.findById(1)
                         .orElseThrow(() -> new IllegalArgumentException("Image type not found"));
@@ -212,6 +219,26 @@ public class RecipeServiceImpl implements RecipeService {
                 .orElseThrow(IllegalArgumentException::new);
         recipe.setRecipeCategory(recipeCategory);
 
+        List<RecipeIngredientCreateRequest> recipeIngredient = request.getRecipeIngredients();
+        if(recipeIngredient != null && !recipeIngredient.isEmpty()) {
+            for (int i = 0; i < recipeIngredient.size(); i++) {
+                RecipeIngredientCreateRequest ingredient = recipeIngredient.get(i);
+
+                IngredientManagement ingredientManage =  ingredientManagementRepository.findByIngredientName(ingredient.getIngredientName())
+                        .orElseThrow(IllegalArgumentException::new);
+
+                System.out.println(ingredient.getIngredientName());
+
+                RecipeIngredient newIngredient = new RecipeIngredient();
+                newIngredient.setRecipe(recipe);
+                newIngredient.setIngredientManagement(ingredientManage);
+                newIngredient.setIngredientIsNecessary(ingredient.isIngredientIsNecessary());
+
+
+                recipe.getRecipeIngredients().add(newIngredient);
+            }
+        }
+
         if(recipeSources != null && !recipeSources.isEmpty()) {
             for(MultipartFile file : recipeSources) {
                 RecipeSource recipeSource = RecipeSourceSaveFile(file, recipe, "recipe/");
@@ -232,7 +259,6 @@ public class RecipeServiceImpl implements RecipeService {
                 newStep.setRecipe(recipe);
 
                 if (recipeStepSources != null && recipeStepSources.size() > i) {
-                    System.out.println("------------------------------");
                     MultipartFile file = recipeStepSources.get(i);
                     RecipeStepSource stepSource = RecipeStepSourceSaveFile(file, newStep, "recipe/step/");
                     newStep.setRecipeStepSource(stepSource); // 파일 매핑
@@ -241,7 +267,6 @@ public class RecipeServiceImpl implements RecipeService {
                 recipe.getRecipeStep().add(newStep);
             }
         }
-
         recipeRepository.save(recipe);
         return recipe;
     }
@@ -258,6 +283,13 @@ public class RecipeServiceImpl implements RecipeService {
         Recipe recipe = recipeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("recipe not found"));
         return mapper.map(recipe, RecipeDetailResponse.class);
+    }
+
+    @Override
+    public List<RecipeCategoryResponse> getRecipeCategory(){
+        return recipeCategoryRepository.findAll().stream()
+                .map(recipeCategory -> mapper.map(recipeCategory, RecipeCategoryResponse.class))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -296,8 +328,8 @@ public class RecipeServiceImpl implements RecipeService {
         if (request.getRecipeName() != null) recipe.setRecipeName(request.getRecipeName());
         if (request.getRecipeCookingTime() != 0) recipe.setRecipeCookingTime(request.getRecipeCookingTime());
         if (request.getRecipeDifficulty() != 0) recipe.setRecipeDifficulty(request.getRecipeDifficulty());
-        if (request.getRecipeCategory() != null) {
-            recipe.setRecipeCategory(recipeCategoryRepository.findByRecipeCategory(request.getRecipeCategory())
+        if (request.getRecipeCategoryPk() != 0) {
+            recipe.setRecipeCategory(recipeCategoryRepository.findById(request.getRecipeCategoryPk())
                     .orElseThrow(() -> new IllegalArgumentException("Category not found")));
         }
 
@@ -309,6 +341,25 @@ public class RecipeServiceImpl implements RecipeService {
         List<RecipeSource> recipeSourcesToDelete = sources.stream()
                 .filter(source -> !uploadedFileNames.contains(source.getRecipeSourceFileName()))
                 .toList();
+
+        recipe.getRecipeIngredients().clear();
+
+        List<RecipeIngredientUpdateRequest> recipeIngredient = request.getRecipeIngredients();
+        if(recipeIngredient != null && !recipeIngredient.isEmpty()) {
+            for (int i = 0; i < recipeIngredient.size(); i++) {
+                RecipeIngredientUpdateRequest ingredient = recipeIngredient.get(i);
+                IngredientManagement ingredientManage =  ingredientManagementRepository.findByIngredientName(ingredient.getIngredientName())
+                        .orElseThrow(IllegalArgumentException::new);
+
+
+                RecipeIngredient newIngredient = new RecipeIngredient();
+                newIngredient.setRecipe(recipe);
+                newIngredient.setIngredientManagement(ingredientManage);
+                newIngredient.setIngredientIsNecessary(ingredient.isIngredientIsNecessary());
+
+                recipe.getRecipeIngredients().add(newIngredient);
+            }
+        }
 
         for (RecipeSource recipeSource : recipeSourcesToDelete) {
             amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, recipeSource.getRecipeSourceServername()));
@@ -324,49 +375,22 @@ public class RecipeServiceImpl implements RecipeService {
                 .filter(file -> !existingFileNames.contains(file.getOriginalFilename()))
                 .toList();
 
-        for (MultipartFile file : filesToAdd) {
-            try {
-                String recipeSourceFileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-                String recipeSourceServername = recipeSourceFileName;
-                String recipeSourceSave = "https://" + bucket + "/recipe/" + recipeSourceServername;
-
-                ObjectMetadata objectMetadata = new ObjectMetadata();
-                objectMetadata.setContentType(file.getContentType());
-                objectMetadata.setContentLength(file.getSize());
-                amazonS3Client.putObject(bucket, recipeSourceServername, file.getInputStream(), objectMetadata);
-
-                RecipeSource recipeSource = new RecipeSource();
-                recipeSource.setRecipeSourceServername(recipeSourceServername);
-                recipeSource.setRecipeSourceSave(recipeSourceSave);
-                recipeSource.setRecipeSourceFileName(file.getOriginalFilename());
-
-                RecipeSourceType recipeSourceType;
-                if (isImageFile(file.getOriginalFilename())) {
-                    recipeSourceType = recipeSourceTypeRepository.findById(1)
-                            .orElseThrow(() -> new IllegalArgumentException("Image type not found"));
-                } else if (isVideoFile(file.getOriginalFilename())) {
-                    recipeSourceType = recipeSourceTypeRepository.findById(2)
-                            .orElseThrow(() -> new IllegalArgumentException("Video type not found"));
-                } else {
-                    throw new IllegalArgumentException("Unsupported file type");
-                }
-
-                recipeSource.setRecipeSourceType(recipeSourceType);
-                recipeSource.setRecipe(recipe);
-                recipeSourceRepository.save(recipeSource);
-            } catch (IOException e) {
-                throw new RuntimeException("Error processing file: " + file.getOriginalFilename(), e);
+        if(recipeSources != null && !recipeSources.isEmpty()) {
+            for(MultipartFile file : recipeSources) {
+                RecipeSource recipeSource = RecipeSourceSaveFile(file, recipe, "recipe/");
+                recipe.getRecipeSource().add(recipeSource);
             }
         }
 
         //시간 문제로 레시피 step 전부 삭제 후 생성하는거로 대처
         List<RecipeStep> steps = recipe.getRecipeStep();
+
+            // 지우는 작업은 늦게함.
         if(steps != null && !steps.isEmpty()) {
             for (RecipeStep step : steps) {
                 RecipeStepSource stepSource = step.getRecipeStepSource();
                 if(stepSource != null) {
                     amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, "recipe/step/"+stepSource.getRecipeStepSourceServername()));
-
                 }
             }
             //기존 사진 소스 다 삭제 후
@@ -374,7 +398,6 @@ public class RecipeServiceImpl implements RecipeService {
         }
 
         List<RecipeStepUpdateRequest> recipeSteps = request.getRecipeSteps();
-
         if(recipeSteps != null ) {
             for (int i = 0; i < recipeSteps.size(); i++) {
                 RecipeStepUpdateRequest step = recipeSteps.get(i);
@@ -388,6 +411,7 @@ public class RecipeServiceImpl implements RecipeService {
                 if (recipeStepSources != null && recipeStepSources.size() > i) {
                     System.out.println("------------------------------22");
                     MultipartFile file = recipeStepSources.get(i);
+                    System.out.println(file);
                     RecipeStepSource stepSource = RecipeStepSourceSaveFile(file, newStep, "recipe/step/");
                     newStep.setRecipeStepSource(stepSource); // 파일 매핑
                 }
@@ -395,6 +419,8 @@ public class RecipeServiceImpl implements RecipeService {
                 recipe.getRecipeStep().add(newStep);
             }
         }
+
+
 
         recipeRepository.save(recipe);
 
@@ -527,13 +553,18 @@ public class RecipeServiceImpl implements RecipeService {
         int randomIndex = random.nextInt(allRecipes.size());
         Recipe selectedRecipe = allRecipes.get(randomIndex);
 
-        // Response 객체로 변환
-        RecipeRecommendResponse response = mapper.map(selectedRecipe, RecipeRecommendResponse.class);
+        // 로그 추가
+        System.out.println("선택된 레시피: " + selectedRecipe.getRecipeName());
 
-        // 재료 정보 추가
         List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(selectedRecipe);
+        // 로그 추가
+        System.out.println("조회된 재료 수: " + recipeIngredients.size());
+
         List<RecipeIngredientInfo> ingredientInfoList = recipeIngredients.stream()
                 .map(ri -> {
+                    // 로그 추가
+                    System.out.println("재료 정보: " + ri.getIngredientManagement().getIngredientName());
+
                     RecipeIngredientInfo info = new RecipeIngredientInfo();
                     info.setIngredientName(ri.getIngredientManagement().getIngredientName());
                     info.setNecessary(ri.isIngredientIsNecessary());
@@ -541,6 +572,7 @@ public class RecipeServiceImpl implements RecipeService {
                 })
                 .collect(Collectors.toList());
 
+        RecipeRecommendResponse response = mapper.map(selectedRecipe, RecipeRecommendResponse.class);
         response.setIngredients(ingredientInfoList);
 
         return response;
