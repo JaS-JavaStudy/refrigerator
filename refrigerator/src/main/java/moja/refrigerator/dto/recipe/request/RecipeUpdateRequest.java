@@ -13,7 +13,7 @@ public class RecipeUpdateRequest {
     private int recipeDifficulty;
 
     private String recipeSource;
-    private String recipeCategory;
+    private int recipeCategoryPk;
     private String userPk;
     private List<RecipeStepUpdateRequest> recipeSteps;
     private List<RecipeIngredientUpdateRequest> recipeIngredients;
