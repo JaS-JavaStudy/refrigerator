@@ -447,7 +447,7 @@ public class RecipeServiceImpl implements RecipeService {
 
                     // 메인 레시피 이미지 설정
                     List<RecipeSourceInfo> mainImages = recipe.getRecipeSource().stream()
-                            .filter(source -> source.getRecipeSourceType().getRecipeSourceType().equals("MAIN"))
+                            .filter(source -> source.getRecipeSourceType().getRecipeSourceType().equals("image"))
                             .map(this::convertToRecipeSourceInfo)
                             .collect(Collectors.toList());
                     response.setMainImages(mainImages);
@@ -483,7 +483,7 @@ public class RecipeServiceImpl implements RecipeService {
 
     private RecipeSourceInfo convertToRecipeSourceInfo(RecipeSource source) {
         RecipeSourceInfo info = new RecipeSourceInfo();
-        info.setFilePath(source.getRecipeSourceSave() + "/" + source.getRecipeSourceServername());
+        info.setFilePath(source.getRecipeSourceSave());
         info.setOriginalName(source.getRecipeSourceFileName());
         return info;
     }
