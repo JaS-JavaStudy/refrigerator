@@ -553,18 +553,10 @@ public class RecipeServiceImpl implements RecipeService {
         int randomIndex = random.nextInt(allRecipes.size());
         Recipe selectedRecipe = allRecipes.get(randomIndex);
 
-        // 로그 추가
-        System.out.println("선택된 레시피: " + selectedRecipe.getRecipeName());
-
         List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(selectedRecipe);
-        // 로그 추가
-        System.out.println("조회된 재료 수: " + recipeIngredients.size());
 
         List<RecipeIngredientInfo> ingredientInfoList = recipeIngredients.stream()
                 .map(ri -> {
-                    // 로그 추가
-                    System.out.println("재료 정보: " + ri.getIngredientManagement().getIngredientName());
-
                     RecipeIngredientInfo info = new RecipeIngredientInfo();
                     info.setIngredientName(ri.getIngredientManagement().getIngredientName());
                     info.setNecessary(ri.isIngredientIsNecessary());
@@ -574,6 +566,18 @@ public class RecipeServiceImpl implements RecipeService {
 
         RecipeRecommendResponse response = mapper.map(selectedRecipe, RecipeRecommendResponse.class);
         response.setIngredients(ingredientInfoList);
+
+        // 이미지 정보 추가
+        List<RecipeSourceInfo> mainImages = selectedRecipe.getRecipeSource().stream()
+                .filter(source -> source.getRecipeSourceType().getRecipeSourceType().equals("image"))
+                .map(source -> {
+                    RecipeSourceInfo info = new RecipeSourceInfo();
+                    info.setFilePath(source.getRecipeSourceSave());  // URL만 설정
+                    info.setOriginalName(source.getRecipeSourceFileName());
+                    return info;
+                })
+                .collect(Collectors.toList());
+        response.setMainImages(mainImages);
 
         return response;
     }
