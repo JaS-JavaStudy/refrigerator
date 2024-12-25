@@ -85,5 +85,16 @@ public class RecipeController {
     ) {
         return ResponseEntity.ok(recipeService.toggleLikeDislike(request));
     }
+    @GetMapping("/reaction")
+    public ResponseEntity<RecipeLikeResponse> getLikeDislike(
+            @RequestBody RecipeLikeRequest request
+    ) {
+        return ResponseEntity.ok(recipeService.getLikeDislike(request));
+    }
+
+    @GetMapping("/liked")
+    public List<RecipeResponse> getLikedRecipes(@RequestParam Long userPk) {
+        return recipeService.getRecipeLikedByUserPk(userPk);
+    }
 
 }
