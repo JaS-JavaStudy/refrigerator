@@ -26,7 +26,7 @@ public class RecipeController {
 
     @PostMapping
     public Recipe createRecipe(
-            @RequestPart RecipeCreateRequest request
+            @RequestPart (name="request") RecipeCreateRequest request
             ,@RequestPart (name="recipeSources",required =false) List<MultipartFile> recipeSources
             ,@RequestPart (name="recipeStepSources",required =false) List<MultipartFile> recipeStepSources
     ){
@@ -43,7 +43,7 @@ public class RecipeController {
     }
 
     @GetMapping("/{id}")
-    public RecipeDetailResponse getRecipe(@PathVariable long id){ return recipeService.getRecipe(id);}
+    public RecipeDetailResponse getRecipe(@PathVariable("id") long id){ return recipeService.getRecipe(id);}
 
     @GetMapping("/category")
     public List<RecipeCategoryResponse> getRecipeCategory(){
@@ -51,7 +51,7 @@ public class RecipeController {
     }
 
     @DeleteMapping
-    public void deleteRecipe(@RequestParam long recipePk){
+    public void deleteRecipe(@RequestParam("recipePk") long recipePk){
         recipeService.deleteRecipe(recipePk);
     }
 
@@ -65,7 +65,7 @@ public class RecipeController {
     }
 
     @GetMapping("/recommend")
-    public List<RecipeRecommendResponse> getRecommendedRecipes(@RequestParam Long userPk) {
+    public List<RecipeRecommendResponse> getRecommendedRecipes(@RequestParam("userPk") Long userPk) {
         return recipeService.getRecommendedRecipes(userPk);
     }
 
@@ -85,6 +85,12 @@ public class RecipeController {
     ) {
         return ResponseEntity.ok(recipeService.toggleLikeDislike(request));
     }
+    @GetMapping("/status")
+    public boolean getLikeStatus(
+            @RequestParam("userPk") Long userPk, @RequestParam("recipePk") Long recipePk
+    ) {
+        return recipeService.getLikeStatus(userPk,recipePk);
+    }
     @GetMapping("/reaction")
     public ResponseEntity<RecipeLikeResponse> getLikeDislike(
             @RequestBody RecipeLikeRequest request
@@ -93,7 +99,7 @@ public class RecipeController {
     }
 
     @GetMapping("/liked")
-    public List<RecipeResponse> getLikedRecipes(@RequestParam Long userPk) {
+    public List<RecipeResponse> getLikedRecipes(@RequestParam("userPk") Long userPk) {
         return recipeService.getRecipeLikedByUserPk(userPk);
     }
 

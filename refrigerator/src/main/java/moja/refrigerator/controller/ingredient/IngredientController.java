@@ -24,7 +24,7 @@ public class IngredientController {
 
     // 전체 재료 조회 API 추가 (userPk 파라미터를 선택적으로 만듦)
     @GetMapping
-    public List<IngredientResponse> getIngredient(@RequestParam(required = false) Long userPk) {
+    public List<IngredientResponse> getIngredient(@RequestParam(name="userPk",required = false) Long userPk) {
         if (userPk != null) {
             // 기존 로직: 특정 사용자의 냉장고 재료 조회
             return ingredientService.getIngredient(userPk);
@@ -38,8 +38,8 @@ public class IngredientController {
     @PostMapping
     public void createIngredient(
             @RequestBody IngredientCreateRequest request,
-            @RequestParam Long userPk,
-            @RequestParam Long ingredientManagementPk) {
+            @RequestParam("userPk") Long userPk,
+            @RequestParam("ingredientManagementPk") Long ingredientManagementPk) {
         ingredientService.createIngredient(request, userPk, ingredientManagementPk);
     }
 

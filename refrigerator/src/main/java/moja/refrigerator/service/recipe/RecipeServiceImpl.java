@@ -282,7 +282,7 @@ public class RecipeServiceImpl implements RecipeService {
 
     @Override
     public RecipeDetailResponse getRecipe(long id) {
-        Recipe recipe = recipeRepository.findById(id)
+        Recipe recipe = recipeRepository.findByRecipePk(id)
                 .orElseThrow(() -> new IllegalArgumentException("recipe not found"));
         return mapper.map(recipe, RecipeDetailResponse.class);
     }
@@ -626,9 +626,22 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
+    public boolean getLikeStatus(long userPk, long recipePk) {
+        Optional<RecipeLikeDislike> likeDislike = recipeLikeDislikeRepository.findByUserUserPkAndRecipeRecipePk(
+                userPk,recipePk
+        );
+        if(likeDislike.isPresent()) {
+            return likeDislike.get().getLikeStatus();
+        }
+        return false;
+    }
+
+    @Override
     public List<RecipeResponse> getRecipeLikedByUserPk(Long userPk) {
         List<RecipeLikeDislike> likeDislikeList = recipeLikeDislikeRepository.findByUserUserPk(userPk);
-        return likeDislikeList.stream().map(RecipeLikeDislike::getRecipe)
+        return likeDislikeList.stream()
+                .filter(RecipeLikeDislike::getLikeStatus) // like_status가 true인 요소만 필터링
+                .map(RecipeLikeDislike::getRecipe)
                 .map(recipe -> mapper.map(recipe, RecipeResponse.class))
                 .collect(Collectors.toList());
     }
