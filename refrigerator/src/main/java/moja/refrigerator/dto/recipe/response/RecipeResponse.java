@@ -5,6 +5,7 @@ import moja.refrigerator.aggregate.recipe.RecipeCategory;
 import moja.refrigerator.aggregate.recipe.RecipeSource;
 import moja.refrigerator.aggregate.recipe.RecipeStep;
 import moja.refrigerator.aggregate.user.User;
+import moja.refrigerator.dto.user.response.UserResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,7 +26,7 @@ public class RecipeResponse {
     private List<RecipeSource> recipeSource;
 
     private List<RecipeStepResponse> recipeStep;
-    private User user;
+    private UserResponse user;
     private RecipeCategory recipeCategory;
     private List<RecipeIngredientResponse> recipeIngredients;
 
