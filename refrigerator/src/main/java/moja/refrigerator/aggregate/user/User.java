@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import moja.refrigerator.aggregate.recipe.RecipeLikeDislike;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -42,4 +43,8 @@ public class User {
 
     @OneToMany(mappedBy = "following", cascade = CascadeType.REMOVE)
     private List<Follow> followers;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
+    private List<RecipeLikeDislike> recipeLikeDislike;
+
 }

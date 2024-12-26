@@ -60,6 +60,9 @@ public class Recipe {
     @JsonManagedReference
     private List<RecipeStep> recipeStep = new ArrayList<>();
 
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
+    private List<RecipeLikeDislike> recipeLikeDislike;
+
 
     @JoinColumn(name = "recipe_category")
     @ManyToOne
