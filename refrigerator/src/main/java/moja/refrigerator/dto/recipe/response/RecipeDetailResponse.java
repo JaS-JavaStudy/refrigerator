@@ -7,6 +7,7 @@ import lombok.Data;
 import moja.refrigerator.aggregate.recipe.RecipeCategory;
 import moja.refrigerator.aggregate.recipe.RecipeSource;
 import moja.refrigerator.dto.ingredient.response.IngredientResponse;
+import moja.refrigerator.dto.user.response.UserResponse;
 
 @Data
 public class RecipeDetailResponse {
@@ -21,7 +22,7 @@ public class RecipeDetailResponse {
     private LocalDateTime recipeUpdateTime;
 
     private List<RecipeSource> recipeSource;
-    private String userPk;
+    private UserResponse user;
     private RecipeCategory recipeCategory;
 
     private List<RecipeIngredientResponse> ingredients;

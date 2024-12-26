@@ -28,6 +28,7 @@ public interface RecipeService {
     RecipeRecommendResponse getRandomRecipe();
     RecipeLikeResponse toggleLikeDislike(RecipeLikeRequest request);
     RecipeLikeResponse getLikeDislike(RecipeLikeRequest request);
+    boolean getLikeStatus(long userPk,long recipePk);
     List<RecipeCategoryResponse> getRecipeCategory();
     List<RecipeResponse> getRecipeLikedByUserPk(Long userPk);
 }
